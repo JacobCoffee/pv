@@ -1,6 +1,6 @@
 # pv - Plan Viewer
 
-Pretty print `plan.json` for task tracking.
+Pretty print and edit `plan.json` for task tracking.
 
 ## Installation
 
@@ -14,39 +14,65 @@ uv tool install /path/to/pv
 
 ## Usage
 
+### View Commands
+
 ```bash
 pv                  # Full plan overview
-pv next             # Show next pending/in-progress task
 pv current          # Completed summary + current phase + next task
+pv next             # Show next pending/in-progress task
 pv phase            # Current phase with all tasks + dependencies
 pv validate         # Validate plan.json against schema
-pv help             # Show help
-
-# Use a different file
-pv current other.json
 ```
 
-## Example Output
+### Edit Commands
 
-```
-📋 Shortlist App v1.0.0
-Progress: 15% (9/60 tasks)
-
-✅ Phase 0: Project Foundation (100%)
-
-🔄 Phase 1: Core Data Models & Authentication (11%)
-   Implement user system with buyer/researcher roles and authentication
-
-   ✅ [1.1.1] Create User model (python-backend-engineer)
-   ⏳ [1.1.2] Create ResearcherProfile model (python-backend-engineer)
-   ⏳ [1.1.3] Create ResearchRequest model (python-backend-engineer)
-
-👉 Next: [1.1.2] Create ResearcherProfile model
+```bash
+pv init "Project Name"                    # Create new plan.json
+pv add-phase "Auth" --desc "User auth"    # Add a phase
+pv add-task 1 "Create model" --agent X    # Add task to phase 1
+pv start 1.1.1                            # Mark task in_progress
+pv done 1.1.1                             # Mark task completed
+pv set 1.1.1 status blocked               # Set any status
+pv set 1.1.1 agent python-backend-engineer
+pv rm task 1.1.1                          # Remove a task
+pv rm phase 2                             # Remove a phase
 ```
 
-## Plan Schema
+### Options
 
-See [plan.schema.json](https://github.com/JacobCoffee/shortlist-app/blob/main/.claude/config/plan.schema.json) for the full schema specification.
+```bash
+pv -f other.json current    # Use different file
+pv init "Name" --force      # Overwrite existing plan.json
+```
+
+## Example
+
+```bash
+$ pv init "My App"
+✅ Created plan.json for 'My App'
+
+$ pv add-phase "Setup" --desc "Project setup"
+✅ Added Phase 0: Setup
+
+$ pv add-task 0 "Initialize repo" --agent github-git-expert
+✅ Added [0.1.1] Initialize repo
+
+$ pv done 0.1.1
+✅ [0.1.1] status → completed
+
+$ pv current
+📋 My App v1.0.0
+Progress: 100% (1/1 tasks)
+
+✅ Phase 0: Setup (100%)
+```
+
+## Features
+
+- Auto-calculates progress percentages
+- Updates phase status based on task completion
+- Tracks `started_at` and `completed_at` timestamps
+- Validates against plan.json schema
 
 ## License
 
