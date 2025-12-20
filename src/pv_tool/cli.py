@@ -1,10 +1,9 @@
-#!/usr/bin/env python3
 """CLI for viewing and editing plan.json files."""
 
 import argparse
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from importlib.resources import files
 from pathlib import Path
 
@@ -51,7 +50,7 @@ def bold_yellow(text: str) -> str:
 
 
 def now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    return datetime.now(UTC).isoformat().replace("+00:00", "Z")
 
 
 def load_plan(path: Path) -> dict | None:
@@ -92,9 +91,7 @@ def recalculate_progress(plan: dict) -> None:
         # Update phase status based on tasks
         if phase_completed == phase_total and phase_total > 0:
             phase["status"] = "completed"
-        elif any(t["status"] == "in_progress" for t in tasks):
-            phase["status"] = "in_progress"
-        elif phase_completed > 0:
+        elif any(t["status"] == "in_progress" for t in tasks) or phase_completed > 0:
             phase["status"] = "in_progress"
 
         total_tasks += phase_total
@@ -406,10 +403,7 @@ def cmd_add_task(args: argparse.Namespace) -> None:
                 max_task = task_num
 
     # Use section 1 if no tasks exist, otherwise increment task number
-    if not existing_tasks:
-        next_id = f"{phase_id}.1.1"
-    else:
-        next_id = f"{phase_id}.{max_section}.{max_task + 1}"
+    next_id = f"{phase_id}.1.1" if not existing_tasks else f"{phase_id}.{max_section}.{max_task + 1}"
 
     task = {
         "id": next_id,

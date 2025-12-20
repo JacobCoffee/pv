@@ -36,4 +36,17 @@ line-length = 120
 target-version = "py314"
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
+select = ["ALL"]
+ignore = [
+    "D1",      # Missing docstrings (small CLI tool)
+    "D203",    # Blank line before class (conflicts with D211)
+    "D213",    # Multi-line summary second line (conflicts with D212)
+    "T20",     # print statements (CLI tool)
+    "ANN",     # Type annotations (using inference)
+    "COM812",  # Trailing comma (formatter handles)
+    "ISC001",  # Single line string concat (formatter handles)
+    "S101",    # assert (fine in CLI)
+    "C901",    # Complexity (CLI main functions are naturally complex)
+    "PLR09",   # Too many X (returns/branches/statements)
+    "PLR2004", # Magic values (CLI doesn't need constants for everything)
+]
