@@ -5,7 +5,10 @@ import argparse
 import json
 import sys
 from datetime import datetime, timezone
+from importlib.resources import files
 from pathlib import Path
+
+import jsonschema
 
 # Status icons
 ICONS = {
@@ -296,37 +299,26 @@ def cmd_phase(plan: dict) -> None:
     print()
 
 
+def load_schema() -> dict:
+    """Load the bundled JSON schema."""
+    schema_path = files("pv_tool").joinpath("plan.schema.json")
+    return json.loads(schema_path.read_text())
+
+
 def cmd_validate(plan: dict, path: Path) -> None:
-    errors = []
+    """Validate plan against JSON schema."""
+    schema = load_schema()
 
-    if "meta" not in plan:
-        errors.append("Missing 'meta' section")
-    if "summary" not in plan:
-        errors.append("Missing 'summary' section")
-    if "phases" not in plan:
-        errors.append("Missing 'phases' section")
-
-    for i, phase in enumerate(plan.get("phases", [])):
-        phase_id = phase.get("id", str(i))
-        if "id" not in phase:
-            errors.append(f"Phase {i}: missing 'id'")
-        if "tasks" not in phase:
-            errors.append(f"Phase {phase_id}: missing 'tasks'")
-
-        for j, task in enumerate(phase.get("tasks", [])):
-            task_id = task.get("id", str(j))
-            if "id" not in task:
-                errors.append(f"Phase {phase_id}, Task {j}: missing 'id'")
-            if "status" not in task:
-                errors.append(f"Task {task_id}: missing 'status'")
-
-    if errors:
-        print(f"❌ Validation failed for {path}:")
-        for err in errors:
-            print(f"   - {err}")
-        sys.exit(1)
-    else:
+    try:
+        jsonschema.validate(plan, schema)
         print(f"✅ {path} is valid")
+    except jsonschema.ValidationError as e:
+        print(f"❌ Validation failed for {path}:")
+        print(f"   {e.message}")
+        if e.absolute_path:
+            json_path = ".".join(str(p) for p in e.absolute_path)
+            print(f"   Path: {json_path}")
+        sys.exit(1)
 
 
 # ============ EDIT COMMANDS ============

@@ -1,6 +1,6 @@
 [project]
 name = "pv-tool"
-version = "0.1.0"
+version = "0.2.0"
 description = "Pretty print plan.json for task tracking"
 readme = "README.md"
 license = "MIT"
@@ -18,7 +18,7 @@ classifiers = [
     "Typing :: Typed",
 ]
 
-dependencies = []
+dependencies = ["jsonschema>=4.23"]
 
 [project.scripts]
 pv = "pv_tool.cli:main"
