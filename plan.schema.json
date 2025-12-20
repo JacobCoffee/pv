@@ -1,0 +1,209 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://shortlist.app/plan.schema.json",
+  "title": "Implementation Plan",
+  "description": "Schema for AI agent-consumable implementation plans",
+  "type": "object",
+  "required": ["meta", "summary", "phases"],
+  "properties": {
+    "meta": {
+      "type": "object",
+      "required": ["project", "version", "created_at", "updated_at", "business_plan_path"],
+      "properties": {
+        "project": {"type": "string"},
+        "version": {"type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$"},
+        "created_at": {"type": "string", "format": "date-time"},
+        "updated_at": {"type": "string", "format": "date-time"},
+        "business_plan_path": {"type": "string"}
+      }
+    },
+    "summary": {
+      "type": "object",
+      "required": ["total_phases", "total_tasks", "completed_tasks", "overall_progress"],
+      "properties": {
+        "total_phases": {"type": "integer", "minimum": 0},
+        "total_tasks": {"type": "integer", "minimum": 0},
+        "completed_tasks": {"type": "integer", "minimum": 0},
+        "in_progress_tasks": {"type": "integer", "minimum": 0},
+        "blocked_tasks": {"type": "integer", "minimum": 0},
+        "overall_progress": {"type": "number", "minimum": 0, "maximum": 100}
+      }
+    },
+    "phases": {
+      "type": "array",
+      "items": {"$ref": "#/definitions/phase"}
+    },
+    "decisions": {
+      "type": "object",
+      "properties": {
+        "pending": {
+          "type": "array",
+          "items": {"$ref": "#/definitions/decision"}
+        },
+        "resolved": {
+          "type": "array",
+          "items": {"$ref": "#/definitions/decision"}
+        }
+      }
+    },
+    "success_metrics": {
+      "type": "object",
+      "properties": {
+        "business_plan_ref": {"$ref": "#/definitions/business_plan_ref"},
+        "targets": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["metric", "target"],
+            "properties": {
+              "metric": {"type": "string"},
+              "target": {"type": "string"},
+              "current": {"type": ["string", "null"]}
+            }
+          }
+        }
+      }
+    },
+    "blockers": {
+      "type": "array",
+      "items": {"$ref": "#/definitions/blocker"}
+    }
+  },
+  "definitions": {
+    "status": {
+      "type": "string",
+      "enum": ["pending", "in_progress", "completed", "blocked", "skipped"]
+    },
+    "agent_type": {
+      "type": ["string", "null"],
+      "enum": [
+        null,
+        "general-purpose",
+        "Explore",
+        "Plan",
+        "software-architect",
+        "software-architect-advanced",
+        "software-debugger",
+        "python-backend-architect",
+        "python-backend-engineer",
+        "Python Testing Expert",
+        "ui-engineer",
+        "ui-comprehensive-tester",
+        "github-git-expert",
+        "documentation-expert",
+        "travel-expert-advanced",
+        "claude-code-guide"
+      ]
+    },
+    "business_plan_ref": {
+      "type": ["object", "null"],
+      "properties": {
+        "section": {"type": "string"},
+        "lines": {
+          "type": "array",
+          "items": {"type": "integer"},
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "key_content": {"type": "string"}
+      },
+      "required": ["section", "lines"]
+    },
+    "tracking": {
+      "type": "object",
+      "properties": {
+        "started_at": {"type": ["string", "null"], "format": "date-time"},
+        "completed_at": {"type": ["string", "null"], "format": "date-time"},
+        "time_spent_minutes": {"type": ["integer", "null"], "minimum": 0},
+        "notes": {"type": ["string", "null"]},
+        "attempts": {"type": "integer", "minimum": 0, "default": 0},
+        "last_error": {"type": ["string", "null"]},
+        "assigned_agent_id": {"type": ["string", "null"]}
+      }
+    },
+    "subtask": {
+      "type": "object",
+      "required": ["id", "title", "status"],
+      "properties": {
+        "id": {"type": "string"},
+        "title": {"type": "string"},
+        "status": {"$ref": "#/definitions/status"}
+      }
+    },
+    "task": {
+      "type": "object",
+      "required": ["id", "title", "status", "agent_type", "depends_on", "tracking"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$"},
+        "title": {"type": "string"},
+        "status": {"$ref": "#/definitions/status"},
+        "agent_type": {"$ref": "#/definitions/agent_type"},
+        "business_plan_ref": {"$ref": "#/definitions/business_plan_ref"},
+        "depends_on": {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "subtasks": {
+          "type": "array",
+          "items": {"$ref": "#/definitions/subtask"}
+        },
+        "tracking": {"$ref": "#/definitions/tracking"}
+      }
+    },
+    "phase": {
+      "type": "object",
+      "required": ["id", "name", "description", "status", "progress", "tasks"],
+      "properties": {
+        "id": {"type": "string"},
+        "name": {"type": "string"},
+        "description": {"type": "string"},
+        "status": {"$ref": "#/definitions/status"},
+        "progress": {
+          "type": "object",
+          "required": ["completed", "total", "percentage"],
+          "properties": {
+            "completed": {"type": "integer", "minimum": 0},
+            "total": {"type": "integer", "minimum": 0},
+            "percentage": {"type": "number", "minimum": 0, "maximum": 100}
+          }
+        },
+        "tasks": {
+          "type": "array",
+          "items": {"$ref": "#/definitions/task"}
+        }
+      }
+    },
+    "decision": {
+      "type": "object",
+      "required": ["id", "question", "options"],
+      "properties": {
+        "id": {"type": "string"},
+        "question": {"type": "string"},
+        "options": {
+          "type": "array",
+          "items": {"type": ["string", "array"]}
+        },
+        "recommended": {"type": ["string", "array", "null"]},
+        "decided": {"type": ["string", "array", "null"]},
+        "decided_at": {"type": ["string", "null"], "format": "date-time"},
+        "decided_by": {"type": ["string", "null"]},
+        "business_plan_ref": {"$ref": "#/definitions/business_plan_ref"}
+      }
+    },
+    "blocker": {
+      "type": "object",
+      "required": ["id", "description", "affects_tasks", "created_at"],
+      "properties": {
+        "id": {"type": "string"},
+        "description": {"type": "string"},
+        "affects_tasks": {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "created_at": {"type": "string", "format": "date-time"},
+        "resolved_at": {"type": ["string", "null"], "format": "date-time"},
+        "resolution": {"type": ["string", "null"]}
+      }
+    }
+  }
+}
