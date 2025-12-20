@@ -1,10 +1,10 @@
 [project]
 name = "pv-tool"
 version = "0.1.0"
-description = "Pretty print plan.json for AI agent task tracking"
+description = "Pretty print plan.json for task tracking"
 readme = "README.md"
 license = "MIT"
-requires-python = ">=3.11"
+requires-python = ">=3.14"
 authors = [{ name = "Jacob Coffee", email = "jacob@z7x.org" }]
 keywords = ["cli", "plan", "task-tracking", "ai-agents"]
 classifiers = [
@@ -13,9 +13,6 @@ classifiers = [
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
     "Topic :: Software Development :: Build Tools",
     "Typing :: Typed",

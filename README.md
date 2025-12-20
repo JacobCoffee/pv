@@ -1,6 +1,6 @@
 # pv - Plan Viewer
 
-Pretty print `plan.json` for AI agent task tracking.
+Pretty print `plan.json` for task tracking.
 
 ## Installation
 
