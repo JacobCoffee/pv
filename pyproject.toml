@@ -29,21 +29,33 @@ pv = "pv_tool.cli:main"
 [project.urls]
 Homepage = "https://github.com/JacobCoffee/pv"
 Repository = "https://github.com/JacobCoffee/pv"
+Changelog = "https://github.com/JacobCoffee/pv/releases/"
+"Issue Tracker" = "https://github.com/JacobCoffee/pv/issues"
 
 [build-system]
 requires = ["uv_build>=0.7"]
 build-backend = "uv_build"
 
 [tool.ruff]
+fix = true
 line-length = 120
+src = ["src/pv_tool"]
 target-version = "py314"
 
+[tool.ruff.format]
+docstring-code-format = true
+docstring-code-line-length = 88
+indent-style = "space"
+quote-style = "double"
+
 [tool.ruff.lint]
+fixable = ["ALL"]
 select = ["ALL"]
 ignore = [
     "D203",    # Blank line before class (conflicts with D211)
     "D213",    # Multi-line summary second line (conflicts with D212)
     "T20",     # print statements (CLI tool)
+    "ANN",     # Type annotations (using inference)
     "COM812",  # Trailing comma (formatter handles)
     "ISC001",  # Single line string concat (formatter handles)
     "S101",    # assert (fine in CLI)
@@ -52,5 +64,81 @@ ignore = [
     "PLR2004", # Magic values (CLI doesn't need constants for everything)
 ]
 
+[tool.ruff.lint.isort]
+known-first-party = ["pv_tool"]
+
 [tool.ruff.lint.pydocstyle]
 convention = "google"
+
+[tool.git-cliff.changelog]
+header = """
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+"""
+body = """
+{% if version %}\
+    {% if previous.version %}\
+## [{{ version | trim_start_matches(pat="v") }}]($REPO/compare/{{ previous.version }}..{{ version }}) - {{ timestamp | date(format="%Y-%m-%d") }}
+    {% else %}\
+## [{{ version | trim_start_matches(pat="v") }}] - {{ timestamp | date(format="%Y-%m-%d") }}
+    {% endif %}\
+{% else %}\
+## [unreleased]
+{% endif %}\
+{% for group, commits in commits | group_by(attribute="group") %}
+
+### {{ group | striptags | trim | upper_first }}
+
+{% for commit in commits
+| filter(attribute="scope")
+| sort(attribute="scope") %}
+- **({{commit.scope}})**{% if commit.breaking %} [**breaking**]{% endif %} {{ commit.message }} - ([{{ commit.id | truncate(length=7, end="") }}]($REPO/commit/{{ commit.id }})) - {{ commit.author.name }}
+{%- endfor -%}
+{%- for commit in commits %}
+{%- if commit.scope -%}
+{% else %}
+- {% if commit.breaking %}[**breaking**] {% endif %}{{ commit.message }} - ([{{ commit.id | truncate(length=7, end="") }}]($REPO/commit/{{ commit.id }})) - {{ commit.author.name }}
+{% endif -%}
+{% endfor -%}
+{% endfor %}
+"""
+footer = """
+---
+*pv-tool Changelog*
+"""
+output = "CHANGELOG.md"
+postprocessors = [
+    { pattern = '\$REPO', replace = "https://github.com/JacobCoffee/pv" },
+]
+trim = true
+
+[tool.git-cliff.git]
+commit_parsers = [
+    { message = "^feat", group = "Features" },
+    { message = "^fix", group = "Bug Fixes" },
+    { message = "^doc", group = "Documentation" },
+    { message = "^perf", group = "Performance" },
+    { message = "^refactor", group = "Refactoring" },
+    { message = "^style", group = "Style" },
+    { message = "^revert", group = "Revert" },
+    { message = "^test", group = "Tests" },
+    { message = "^chore\\(version\\):", skip = true },
+    { message = "^chore", group = "Miscellaneous Chores" },
+    { body = ".*security", group = "Security" },
+]
+commit_preprocessors = []
+conventional_commits = true
+filter_commits = false
+filter_unconventional = true
+ignore_tags = ""
+protect_breaking_commits = false
+skip_tags = ""
+sort_commits = "oldest"
+split_commits = false
+tag_pattern = "v[0-9].*"
+topo_order = false
+
+[tool.uv]
+default-groups = ["dev"]

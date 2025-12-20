@@ -166,11 +166,29 @@ def find_phase(plan: dict, phase_id: str) -> dict | None:
     return None
 
 
+def task_to_dict(phase: dict, task: dict) -> dict:
+    """Convert a task to a JSON-serializable dict."""
+    return {
+        "id": task["id"],
+        "title": task["title"],
+        "status": task["status"],
+        "phase_id": phase["id"],
+        "phase_name": phase["name"],
+        "agent_type": task.get("agent_type"),
+        "depends_on": task.get("depends_on", []),
+        "tracking": task.get("tracking", {}),
+    }
+
+
 # ============ VIEW COMMANDS ============
 
 
-def cmd_overview(plan: dict) -> None:
+def cmd_overview(plan: dict, *, as_json: bool = False) -> None:
     """Display full plan overview with all phases and tasks."""
+    if as_json:
+        print(json.dumps(plan, indent=2))
+        return
+
     meta = plan.get("meta", {})
     summary = plan.get("summary", {})
 
@@ -203,8 +221,19 @@ def cmd_overview(plan: dict) -> None:
         print()
 
 
-def cmd_current(plan: dict) -> None:
+def cmd_current(plan: dict, *, as_json: bool = False) -> None:
     """Display completed phases summary, current phase, and next task."""
+    if as_json:
+        current = get_current_phase(plan)
+        result = get_next_task(plan)
+        output = {
+            "summary": plan.get("summary", {}),
+            "current_phase": current,
+            "next_task": task_to_dict(*result) if result else None,
+        }
+        print(json.dumps(output, indent=2))
+        return
+
     meta = plan.get("meta", {})
     summary = plan.get("summary", {})
 
@@ -251,14 +280,22 @@ def cmd_current(plan: dict) -> None:
     print()
 
 
-def cmd_next(plan: dict) -> None:
+def cmd_next(plan: dict, *, as_json: bool = False) -> None:
     """Display the next task to work on."""
     result = get_next_task(plan)
     if not result:
-        print("No pending tasks found!")
+        if as_json:
+            print("null")
+        else:
+            print("No pending tasks found!")
         return
 
     phase, task = result
+
+    if as_json:
+        print(json.dumps(task_to_dict(phase, task), indent=2))
+        return
+
     icon = get_status_icon(task["status"])
     agent = task.get("agent_type") or "general-purpose"
     task_id = task["id"]
@@ -277,11 +314,18 @@ def cmd_next(plan: dict) -> None:
     print()
 
 
-def cmd_phase(plan: dict) -> None:
+def cmd_phase(plan: dict, *, as_json: bool = False) -> None:
     """Display current phase details with all tasks and dependencies."""
     phase = get_current_phase(plan)
     if not phase:
-        print("No active phase found!")
+        if as_json:
+            print("null")
+        else:
+            print("No active phase found!")
+        return
+
+    if as_json:
+        print(json.dumps(phase, indent=2))
         return
 
     progress = phase.get("progress", {})
@@ -309,25 +353,115 @@ def cmd_phase(plan: dict) -> None:
     print()
 
 
+def cmd_get(plan: dict, task_id: str, *, as_json: bool = False) -> None:
+    """Display a specific task by ID."""
+    result = find_task(plan, task_id)
+    if not result:
+        if as_json:
+            print("null")
+        else:
+            print(f"Task '{task_id}' not found!")
+        return
+
+    phase, task = result
+
+    if as_json:
+        print(json.dumps(task_to_dict(phase, task), indent=2))
+        return
+
+    icon = get_status_icon(task["status"])
+    agent = task.get("agent_type") or "general-purpose"
+    tracking = task.get("tracking", {})
+
+    print(f"\n{bold(f'[{task_id}] {task["title"]}')}")
+    print(f"  {dim('Status:')} {icon} {task['status']}")
+    print(f"  {dim('Phase:')} {phase['name']}")
+    print(f"  {dim('Agent:')} {agent}")
+
+    deps = task.get("depends_on", [])
+    if deps:
+        print(f"  {dim('Depends on:')} {', '.join(deps)}")
+
+    if tracking.get("started_at"):
+        print(f"  {dim('Started:')} {tracking['started_at'][:10]}")
+    if tracking.get("completed_at"):
+        print(f"  {dim('Completed:')} {tracking['completed_at'][:10]}")
+    print()
+
+
+def cmd_last(plan: dict, count: int = 5, *, as_json: bool = False) -> None:
+    """Display recently completed tasks."""
+    completed_tasks = []
+
+    for phase in plan.get("phases", []):
+        for task in phase.get("tasks", []):
+            if task["status"] == "completed":
+                tracking = task.get("tracking", {})
+                completed_at = tracking.get("completed_at")
+                completed_tasks.append((phase, task, completed_at))
+
+    if not completed_tasks:
+        if as_json:
+            print("[]")
+        else:
+            print("No completed tasks found!")
+        return
+
+    # Sort by completion time (most recent first), tasks without timestamp go last
+    completed_tasks.sort(key=lambda x: x[2] or "", reverse=True)
+
+    if as_json:
+        output = [
+            {
+                "id": task["id"],
+                "title": task["title"],
+                "phase_id": phase["id"],
+                "phase_name": phase["name"],
+                "completed_at": completed_at,
+                "agent_type": task.get("agent_type"),
+            }
+            for phase, task, completed_at in completed_tasks[:count]
+        ]
+        print(json.dumps(output, indent=2))
+        return
+
+    print(f"\n{bold('Recently Completed:')}\n")
+    for phase, task, completed_at in completed_tasks[:count]:
+        task_id = task["id"]
+        task_title = task["title"]
+        phase_name = phase["name"]
+        time_str = completed_at[:10] if completed_at else "unknown"
+        print(f"   ✅ [{task_id}] {task_title}")
+        print(f"      {dim(f'{phase_name} · {time_str}')}")
+    print()
+
+
 def load_schema() -> dict:
     """Load the bundled JSON schema."""
     schema_path = files("pv_tool").joinpath("plan.schema.json")
     return json.loads(schema_path.read_text())
 
 
-def cmd_validate(plan: dict, path: Path) -> None:
+def cmd_validate(plan: dict, path: Path, *, as_json: bool = False) -> None:
     """Validate plan against JSON schema."""
     schema = load_schema()
 
     try:
         jsonschema.validate(plan, schema)
-        print(f"✅ {path} is valid")
+        if as_json:
+            print(json.dumps({"valid": True, "path": str(path)}))
+        else:
+            print(f"✅ {path} is valid")
     except jsonschema.ValidationError as e:
-        print(f"❌ Validation failed for {path}:")
-        print(f"   {e.message}")
-        if e.absolute_path:
-            json_path = ".".join(str(p) for p in e.absolute_path)
-            print(f"   Path: {json_path}")
+        if as_json:
+            json_path = ".".join(str(p) for p in e.absolute_path) if e.absolute_path else None
+            print(json.dumps({"valid": False, "path": str(path), "error": e.message, "json_path": json_path}))
+        else:
+            print(f"❌ Validation failed for {path}:")
+            print(f"   {e.message}")
+            if e.absolute_path:
+                json_path = ".".join(str(p) for p in e.absolute_path)
+                print(f"   Path: {json_path}")
         sys.exit(1)
 
 
@@ -510,70 +644,119 @@ def cmd_rm(args: argparse.Namespace) -> None:
 
 # ============ MAIN ============
 
+HELP_TEXT = """\
+View and edit plan.json for task tracking
+
+View Commands:
+  (none)              Show full plan overview
+  current, c          Show current progress and next task
+  next, n             Show next task to work on
+  phase, p            Show current phase details
+  get, g ID           Show a specific task by ID
+  last, l             Show recently completed tasks
+  validate, v         Validate plan.json structure
+
+Edit Commands:
+  init NAME           Create new plan.json
+  add-phase NAME      Add a new phase
+  add-task PHASE TITLE  Add a new task to a phase
+  set ID FIELD VALUE  Set a task field (status, agent, title)
+  done ID             Mark task as completed
+  start ID            Mark task as in_progress
+  rm TYPE ID          Remove a phase or task
+
+Options:
+  -f, --file FILE     Path to plan.json (default: ./plan.json)
+  --json              Output as JSON (view commands only)
+  -h, --help          Show this help message
+"""
+
 
 def main() -> None:
     """CLI entry point for pv command."""
     parser = argparse.ArgumentParser(
         prog="pv",
         description="View and edit plan.json for task tracking",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        usage="pv [-f FILE] [--json] <command> [args]",
+        add_help=False,
     )
     parser.add_argument(
         "-f",
         "--file",
         type=Path,
         default=Path("plan.json"),
-        help="Path to plan.json (default: ./plan.json)",
+        help=argparse.SUPPRESS,
+    )
+    parser.add_argument(
+        "--json",
+        action="store_true",
+        help=argparse.SUPPRESS,
+    )
+    parser.add_argument(
+        "-h",
+        "--help",
+        action="store_true",
+        help=argparse.SUPPRESS,
     )
 
     subparsers = parser.add_subparsers(dest="command", metavar="command")
 
-    # View commands (also work without subcommand)
-    subparsers.add_parser("current", aliases=["c"], help="Show current progress and next task")
-    subparsers.add_parser("next", aliases=["n"], help="Show next task to work on")
-    subparsers.add_parser("phase", aliases=["p"], help="Show current phase details")
-    subparsers.add_parser("validate", aliases=["v"], help="Validate plan.json structure")
-    subparsers.add_parser("help", aliases=["h"], help="Show this help message")
+    # View commands (all support --json, default=None to not override parent)
+    for name, aliases in [("current", ["c"]), ("next", ["n"]), ("phase", ["p"]), ("validate", ["v"])]:
+        sp = subparsers.add_parser(name, aliases=aliases, add_help=False, parents=[])
+        sp.add_argument("--json", action="store_true", default=None)
+
+    get_p = subparsers.add_parser("get", aliases=["g"], add_help=False)
+    get_p.add_argument("id")
+    get_p.add_argument("--json", action="store_true", default=None)
+
+    last_p = subparsers.add_parser("last", aliases=["l"], add_help=False)
+    last_p.add_argument("-n", "--count", type=int, default=5)
+    last_p.add_argument("--json", action="store_true", default=None)
+
+    subparsers.add_parser("help", aliases=["h"], add_help=False)
 
     # Init
-    init_p = subparsers.add_parser("init", help="Create new plan.json")
-    init_p.add_argument("name", help="Project name")
-    init_p.add_argument("--force", action="store_true", help="Overwrite existing file")
+    init_p = subparsers.add_parser("init", add_help=False)
+    init_p.add_argument("name")
+    init_p.add_argument("--force", action="store_true")
 
     # Add phase
-    add_phase_p = subparsers.add_parser("add-phase", help="Add a new phase")
-    add_phase_p.add_argument("name", help="Phase name")
-    add_phase_p.add_argument("--desc", help="Phase description")
+    add_phase_p = subparsers.add_parser("add-phase", add_help=False)
+    add_phase_p.add_argument("name")
+    add_phase_p.add_argument("--desc")
 
     # Add task
-    add_task_p = subparsers.add_parser("add-task", help="Add a new task")
-    add_task_p.add_argument("phase", help="Phase ID to add task to")
-    add_task_p.add_argument("title", help="Task title")
-    add_task_p.add_argument("--agent", help="Agent type")
-    add_task_p.add_argument("--deps", help="Comma-separated dependency task IDs")
+    add_task_p = subparsers.add_parser("add-task", add_help=False)
+    add_task_p.add_argument("phase")
+    add_task_p.add_argument("title")
+    add_task_p.add_argument("--agent")
+    add_task_p.add_argument("--deps")
 
     # Set field
-    set_p = subparsers.add_parser("set", help="Set a task field")
-    set_p.add_argument("id", help="Task ID")
-    set_p.add_argument("field", help="Field to set (status, agent, title)")
-    set_p.add_argument("value", help="New value")
+    set_p = subparsers.add_parser("set", add_help=False)
+    set_p.add_argument("id")
+    set_p.add_argument("field")
+    set_p.add_argument("value")
 
     # Shortcuts
-    done_p = subparsers.add_parser("done", help="Mark task as completed")
-    done_p.add_argument("id", help="Task ID")
+    done_p = subparsers.add_parser("done", add_help=False)
+    done_p.add_argument("id")
 
-    start_p = subparsers.add_parser("start", help="Mark task as in_progress")
-    start_p.add_argument("id", help="Task ID")
+    start_p = subparsers.add_parser("start", add_help=False)
+    start_p.add_argument("id")
 
     # Remove
-    rm_p = subparsers.add_parser("rm", help="Remove a phase or task")
-    rm_p.add_argument("type", choices=["phase", "task"], help="What to remove")
-    rm_p.add_argument("id", help="ID to remove")
+    rm_p = subparsers.add_parser("rm", add_help=False)
+    rm_p.add_argument("type", choices=["phase", "task"])
+    rm_p.add_argument("id")
 
     args = parser.parse_args()
 
     # Help command
-    if args.command in ("help", "h"):
-        parser.print_help()
+    if args.help or args.command in ("help", "h"):
+        print(HELP_TEXT)
         return
 
     # Handle edit commands that don't need to load plan first
@@ -605,17 +788,24 @@ def main() -> None:
     if not plan:
         sys.exit(1)
 
+    # --json can appear anywhere in args
+    as_json = "--json" in sys.argv
+
     match args.command:
         case "current" | "c":
-            cmd_current(plan)
+            cmd_current(plan, as_json=as_json)
         case "next" | "n":
-            cmd_next(plan)
+            cmd_next(plan, as_json=as_json)
         case "phase" | "p":
-            cmd_phase(plan)
+            cmd_phase(plan, as_json=as_json)
+        case "get" | "g":
+            cmd_get(plan, args.id, as_json=as_json)
+        case "last" | "l":
+            cmd_last(plan, args.count, as_json=as_json)
         case "validate" | "v":
-            cmd_validate(plan, args.file)
+            cmd_validate(plan, args.file, as_json=as_json)
         case _:
-            cmd_overview(plan)
+            cmd_overview(plan, as_json=as_json)
 
 
 if __name__ == "__main__":

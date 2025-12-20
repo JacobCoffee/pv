@@ -1,9 +1,12 @@
 SHELL := /bin/bash
 .DEFAULT_GOAL := help
-.PHONY: help lint fmt ci clean
+.PHONY: help install lint fmt ci clean
 
 help: ## Show this help
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n\n"} /^[a-zA-Z0-9_-]+:.*?##/ { printf "  \033[36m%-12s\033[0m %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
+
+install: ## Install pv as a uv tool
+	@uv tool install . --force --reinstall --python 3.14
 
 lint: ## Run ruff linter with fixes
 	@uv run ruff check src/ --fix
