@@ -30,26 +30,32 @@ CYAN = "\033[36m"
 
 
 def bold(text: str) -> str:
+    """Apply bold ANSI formatting to text."""
     return f"{BOLD}{text}{RESET}"
 
 
 def dim(text: str) -> str:
+    """Apply dim ANSI formatting to text."""
     return f"{DIM}{text}{RESET}"
 
 
 def green(text: str) -> str:
+    """Apply green ANSI color to text."""
     return f"{GREEN}{text}{RESET}"
 
 
 def bold_cyan(text: str) -> str:
+    """Apply bold cyan ANSI formatting to text."""
     return f"{BOLD}{CYAN}{text}{RESET}"
 
 
 def bold_yellow(text: str) -> str:
+    """Apply bold yellow ANSI formatting to text."""
     return f"{BOLD}{YELLOW}{text}{RESET}"
 
 
 def now_iso() -> str:
+    """Return current UTC time in ISO 8601 format."""
     return datetime.now(UTC).isoformat().replace("+00:00", "Z")
 
 
@@ -106,10 +112,12 @@ def recalculate_progress(plan: dict) -> None:
 
 
 def get_status_icon(status: str) -> str:
+    """Return emoji icon for a task status."""
     return ICONS.get(status, "❓")
 
 
 def get_current_phase(plan: dict) -> dict | None:
+    """Find the current in_progress or first pending phase."""
     for phase in plan.get("phases", []):
         if phase["status"] == "in_progress":
             return phase
@@ -120,6 +128,7 @@ def get_current_phase(plan: dict) -> dict | None:
 
 
 def get_next_task(plan: dict) -> tuple[dict, dict] | None:
+    """Find the next actionable task with all dependencies met."""
     for phase in plan.get("phases", []):
         if phase["status"] in ("completed", "skipped"):
             continue
@@ -161,6 +170,7 @@ def find_phase(plan: dict, phase_id: str) -> dict | None:
 
 
 def cmd_overview(plan: dict) -> None:
+    """Display full plan overview with all phases and tasks."""
     meta = plan.get("meta", {})
     summary = plan.get("summary", {})
 
@@ -194,6 +204,7 @@ def cmd_overview(plan: dict) -> None:
 
 
 def cmd_current(plan: dict) -> None:
+    """Display completed phases summary, current phase, and next task."""
     meta = plan.get("meta", {})
     summary = plan.get("summary", {})
 
@@ -241,6 +252,7 @@ def cmd_current(plan: dict) -> None:
 
 
 def cmd_next(plan: dict) -> None:
+    """Display the next task to work on."""
     result = get_next_task(plan)
     if not result:
         print("No pending tasks found!")
@@ -266,6 +278,7 @@ def cmd_next(plan: dict) -> None:
 
 
 def cmd_phase(plan: dict) -> None:
+    """Display current phase details with all tasks and dependencies."""
     phase = get_current_phase(plan)
     if not phase:
         print("No active phase found!")
@@ -499,6 +512,7 @@ def cmd_rm(args: argparse.Namespace) -> None:
 
 
 def main() -> None:
+    """CLI entry point for pv command."""
     parser = argparse.ArgumentParser(
         prog="pv",
         description="View and edit plan.json for task tracking",
