@@ -10,16 +10,13 @@ help: ## Show this help
 install: ## Install pv as a uv tool
 	@uv tool install . --force --reinstall --python 3.14
 
-lint: ## Run ruff linter with fixes
-	@uv run ruff check src/ tests/ --fix
-
-fmt: ## Format code with ruff
-	@uv run ruff format src/ tests/
+lint: ## Run all pre-commit hooks via prek
+	@prek run --all-files
 
 test: ## Run tests with 100% coverage requirement
 	@uv run pytest
 
-ci: lint fmt test ## Run all checks
+ci: lint test ## Run all checks (prek + tests)
 
 ##@ Documentation
 
