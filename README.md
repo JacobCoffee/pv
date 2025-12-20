@@ -9,7 +9,8 @@ Pretty print and edit `plan.json` for task tracking.
 uv tool install git+https://github.com/JacobCoffee/pv
 
 # Or from local checkout
-uv tool install /path/to/pv
+make install
+# or: uv tool install . --force --reinstall --python 3.14
 ```
 
 ## Usage
@@ -18,10 +19,13 @@ uv tool install /path/to/pv
 
 ```bash
 pv                  # Full plan overview
-pv current          # Completed summary + current phase + next task
-pv next             # Show next pending/in-progress task
-pv phase            # Current phase with all tasks + dependencies
-pv validate         # Validate plan.json against schema
+pv c, current       # Completed summary + current phase + next task
+pv n, next          # Show next pending/in-progress task
+pv p, phase         # Current phase with all tasks + dependencies
+pv g, get ID        # Show a specific task by ID
+pv l, last          # Show recently completed tasks
+pv v, validate      # Validate plan.json against schema
+pv h, help          # Show help
 ```
 
 ### Edit Commands
@@ -42,6 +46,9 @@ pv rm phase 2                             # Remove a phase
 
 ```bash
 pv -f other.json current    # Use different file
+pv current --json           # Output as JSON (all view commands)
+pv --json current           # Same thing
+pv last -n 10               # Show last 10 completed tasks
 pv init "Name" --force      # Overwrite existing plan.json
 ```
 
@@ -60,11 +67,19 @@ $ pv add-task 0 "Initialize repo" --agent github-git-expert
 $ pv done 0.1.1
 ✅ [0.1.1] status → completed
 
-$ pv current
+$ pv c
 📋 My App v1.0.0
 Progress: 100% (1/1 tasks)
 
 ✅ Phase 0: Setup (100%)
+
+$ pv g 0.1.1 --json
+{
+  "id": "0.1.1",
+  "title": "Initialize repo",
+  "status": "completed",
+  ...
+}
 ```
 
 ## Features
@@ -73,6 +88,7 @@ Progress: 100% (1/1 tasks)
 - Updates phase status based on task completion
 - Tracks `started_at` and `completed_at` timestamps
 - Validates against plan.json schema
+- JSON output for all view commands (`--json`)
 
 ## License
 
