@@ -504,7 +504,8 @@ def main() -> None:
         description="View and edit plan.json for task tracking",
     )
     parser.add_argument(
-        "-f", "--file",
+        "-f",
+        "--file",
         type=Path,
         default=Path("plan.json"),
         help="Path to plan.json (default: ./plan.json)",

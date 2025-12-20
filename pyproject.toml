@@ -20,6 +20,9 @@ classifiers = [
 
 dependencies = ["jsonschema>=4.23"]
 
+[dependency-groups]
+dev = ["ruff>=0.11"]
+
 [project.scripts]
 pv = "pv_tool.cli:main"
 
