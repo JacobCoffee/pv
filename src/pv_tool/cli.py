@@ -523,6 +523,7 @@ def main() -> None:
     subparsers.add_parser("next", aliases=["n"], help="Show next task to work on")
     subparsers.add_parser("phase", aliases=["p"], help="Show current phase details")
     subparsers.add_parser("validate", aliases=["v"], help="Validate plan.json structure")
+    subparsers.add_parser("help", aliases=["h"], help="Show this help message")
 
     # Init
     init_p = subparsers.add_parser("init", help="Create new plan.json")
@@ -560,6 +561,11 @@ def main() -> None:
     rm_p.add_argument("id", help="ID to remove")
 
     args = parser.parse_args()
+
+    # Help command
+    if args.command in ("help", "h"):
+        parser.print_help()
+        return
 
     # Handle edit commands that don't need to load plan first
     match args.command:
