@@ -1,0 +1,80 @@
+/* Custom CSS for pv documentation */
+
+/* Improve code block readability */
+.highlight pre {
+    padding: 1rem;
+    border-radius: 0.5rem;
+}
+
+/* Better admonition styling */
+.admonition {
+    border-radius: 0.5rem;
+    margin: 1.5rem 0;
+}
+
+/* Improve table styling */
+table.docutils {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1rem 0;
+}
+
+table.docutils th,
+table.docutils td {
+    padding: 0.75rem;
+    border: 1px solid var(--color-table-border);
+}
+
+/* Better inline code styling */
+code.literal {
+    padding: 0.2em 0.4em;
+    border-radius: 0.25rem;
+}
+
+/* API reference improvements */
+dl.py.class > dt,
+dl.py.function > dt,
+dl.py.method > dt {
+    padding: 0.75rem;
+    border-radius: 0.25rem;
+    margin-bottom: 0.5rem;
+}
+
+/* Improve sidebar navigation */
+.sidebar-tree .reference {
+    display: block;
+    padding: 0.25rem 0;
+}
+
+/* Status badge styling for CLI docs */
+.status-badge {
+    display: inline-block;
+    padding: 0.25em 0.5em;
+    font-size: 0.75em;
+    font-weight: 600;
+    border-radius: 0.25rem;
+    margin-left: 0.5rem;
+}
+
+/* CLI command styling */
+.command-name {
+    font-family: var(--font-stack--monospace);
+    font-weight: 600;
+}
+
+/* Better spacing for grid cards on landing page */
+.sd-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.sd-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Lead paragraph styling */
+.lead p {
+    font-size: 1.25rem;
+    line-height: 1.6;
+    color: var(--color-foreground-secondary);
+}

@@ -21,7 +21,21 @@ classifiers = [
 dependencies = ["jsonschema>=4.23"]
 
 [dependency-groups]
-dev = ["ruff>=0.11"]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=6.0",
+    "pytest-sugar>=1.1.1",
+    "ruff>=0.11",
+]
+docs = [
+    "sphinx>=7.0",
+    "shibuya>=2024.1",
+    "sphinx-copybutton>=0.5",
+    "sphinx-design>=0.5",
+    "sphinx-autodoc-typehints>=2.0",
+    "myst-parser>=3.0",
+    "linkify-it-py>=2.0",
+]
 
 [project.scripts]
 pv = "pv_tool.cli:main"
@@ -139,6 +153,30 @@ sort_commits = "oldest"
 split_commits = false
 tag_pattern = "v[0-9].*"
 topo_order = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+addopts = [
+    "-v",
+    "--strict-markers",
+    "--tb=short",
+    "--cov=src/pv_tool",
+    "--cov-report=term-missing:skip-covered",
+    "--cov-fail-under=100",
+]
+filterwarnings = ["error", "ignore::DeprecationWarning"]
+
+[tool.coverage.run]
+source = ["src/pv_tool"]
+branch = true
+omit = ["*/tests/*"]
+
+[tool.coverage.report]
+exclude_lines = ["pragma: no cover", "if __name__ == .__main__.:"]
+fail_under = 100
+show_missing = true
 
 [tool.uv]
 default-groups = ["dev"]
