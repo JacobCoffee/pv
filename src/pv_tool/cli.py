@@ -4,6 +4,26 @@ import argparse
 import sys
 from pathlib import Path
 
+from pv_tool.commands.edit import (
+    cmd_add_phase,
+    cmd_add_task,
+    cmd_done,
+    cmd_init,
+    cmd_rm,
+    cmd_set,
+    cmd_start,
+)
+from pv_tool.commands.view import (
+    HELP_TEXT,
+    cmd_current,
+    cmd_get,
+    cmd_last,
+    cmd_next,
+    cmd_overview,
+    cmd_phase,
+    cmd_validate,
+)
+
 # Re-export all public API for backward compatibility with tests
 from pv_tool.formatting import (
     BOLD,
@@ -30,25 +50,6 @@ from pv_tool.state import (
     get_next_task,
     recalculate_progress,
     task_to_dict,
-)
-from pv_tool.commands.view import (
-    HELP_TEXT,
-    cmd_current,
-    cmd_get,
-    cmd_last,
-    cmd_next,
-    cmd_overview,
-    cmd_phase,
-    cmd_validate,
-)
-from pv_tool.commands.edit import (
-    cmd_add_phase,
-    cmd_add_task,
-    cmd_done,
-    cmd_init,
-    cmd_rm,
-    cmd_set,
-    cmd_start,
 )
 
 # Explicit __all__ for documentation and IDE support
@@ -216,8 +217,9 @@ def main() -> None:
 
     # View commands need to load plan
     plan = load_plan(args.file)
-    if not plan:
+    if plan is None:
         sys.exit(1)
+    assert plan is not None  # Help type checker after sys.exit
 
     # --json can appear anywhere in args
     as_json = "--json" in sys.argv

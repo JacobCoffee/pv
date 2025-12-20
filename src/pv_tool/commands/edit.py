@@ -40,8 +40,9 @@ def cmd_add_phase(args: argparse.Namespace) -> None:
     """Add a new phase."""
     path = args.file
     plan = load_plan(path)
-    if not plan:
+    if plan is None:
         sys.exit(1)
+    assert plan is not None
 
     # Determine next phase ID
     existing_ids = [int(p["id"]) for p in plan["phases"] if p["id"].isdigit()]
@@ -65,13 +66,15 @@ def cmd_add_task(args: argparse.Namespace) -> None:
     """Add a new task to a phase."""
     path = args.file
     plan = load_plan(path)
-    if not plan:
+    if plan is None:
         sys.exit(1)
+    assert plan is not None
 
     phase = find_phase(plan, args.phase)
-    if not phase:
+    if phase is None:
         print(f"Error: Phase '{args.phase}' not found", file=sys.stderr)
         sys.exit(1)
+    assert phase is not None
 
     # Determine next task ID (phase.section.task)
     phase_id = phase["id"]
@@ -110,13 +113,15 @@ def cmd_set(args: argparse.Namespace) -> None:
     """Set a task field."""
     path = args.file
     plan = load_plan(path)
-    if not plan:
+    if plan is None:
         sys.exit(1)
+    assert plan is not None
 
     result = find_task(plan, args.id)
-    if not result:
+    if result is None:
         print(f"Error: Task '{args.id}' not found", file=sys.stderr)
         sys.exit(1)
+    assert result is not None
 
     _, task = result
 
@@ -159,14 +164,16 @@ def cmd_rm(args: argparse.Namespace) -> None:
     """Remove a phase or task."""
     path = args.file
     plan = load_plan(path)
-    if not plan:
+    if plan is None:
         sys.exit(1)
+    assert plan is not None
 
     if args.type == "task":
         result = find_task(plan, args.id)
-        if not result:
+        if result is None:
             print(f"Error: Task '{args.id}' not found", file=sys.stderr)
             sys.exit(1)
+        assert result is not None
         phase, task = result
         phase["tasks"].remove(task)
         save_plan(path, plan)
@@ -174,9 +181,10 @@ def cmd_rm(args: argparse.Namespace) -> None:
 
     else:  # args.type == "phase" (argparse enforces this)
         phase = find_phase(plan, args.id)
-        if not phase:
+        if phase is None:
             print(f"Error: Phase '{args.id}' not found", file=sys.stderr)
             sys.exit(1)
+        assert phase is not None
         plan["phases"].remove(phase)
         save_plan(path, plan)
         print(f"✅ Removed phase {args.id}")
