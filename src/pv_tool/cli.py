@@ -519,10 +519,10 @@ def main() -> None:
     subparsers = parser.add_subparsers(dest="command", metavar="command")
 
     # View commands (also work without subcommand)
-    subparsers.add_parser("current", help="Show current progress and next task")
-    subparsers.add_parser("next", help="Show next task to work on")
-    subparsers.add_parser("phase", help="Show current phase details")
-    subparsers.add_parser("validate", help="Validate plan.json structure")
+    subparsers.add_parser("current", aliases=["c"], help="Show current progress and next task")
+    subparsers.add_parser("next", aliases=["n"], help="Show next task to work on")
+    subparsers.add_parser("phase", aliases=["p"], help="Show current phase details")
+    subparsers.add_parser("validate", aliases=["v"], help="Validate plan.json structure")
 
     # Init
     init_p = subparsers.add_parser("init", help="Create new plan.json")
@@ -591,13 +591,13 @@ def main() -> None:
         sys.exit(1)
 
     match args.command:
-        case "current":
+        case "current" | "c":
             cmd_current(plan)
-        case "next":
+        case "next" | "n":
             cmd_next(plan)
-        case "phase":
+        case "phase" | "p":
             cmd_phase(plan)
-        case "validate":
+        case "validate" | "v":
             cmd_validate(plan, args.file)
         case _:
             cmd_overview(plan)
