@@ -90,6 +90,9 @@ convention = "google"
     "D100",    # Missing docstring in public module
     "D103",    # Missing docstring in public function
 ]
+"docs/conf.py" = [
+    "INP001",  # Sphinx config is not a package
+]
 
 [tool.git-cliff.changelog]
 header = """

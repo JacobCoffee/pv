@@ -2,16 +2,17 @@
 
 from __future__ import annotations
 
-import os
 import sys
-from datetime import datetime
+from datetime import UTC, datetime
+from pathlib import Path
 
 # Add source directory to path for autodoc
-sys.path.insert(0, os.path.abspath("../src"))
+sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 # -- Project information -----------------------------------------------------
 project = "pv"
-copyright = f"{datetime.now().year}, Jacob Coffee"
+project_copyright = f"{datetime.now(tz=UTC).year}, Jacob Coffee"
+copyright = project_copyright  # noqa: A001
 author = "Jacob Coffee"
 release = "0.2.0"
 version = "0.2.0"
@@ -96,7 +97,7 @@ intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
 }
 
-# TODO extension
+# Sphinx TODO extension
 todo_include_todos = True
 
 # MyST parser settings
