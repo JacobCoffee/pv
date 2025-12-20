@@ -632,7 +632,7 @@ def cmd_rm(args: argparse.Namespace) -> None:
         save_plan(path, plan)
         print(f"✅ Removed task [{args.id}]")
 
-    elif args.type == "phase":
+    else:  # args.type == "phase" (argparse enforces this)
         phase = find_phase(plan, args.id)
         if not phase:
             print(f"Error: Phase '{args.id}' not found", file=sys.stderr)
