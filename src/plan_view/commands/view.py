@@ -19,7 +19,7 @@ View Commands:
   next, n             Show next task to work on
   phase, p            Show current phase details
   get, g ID           Show a specific task by ID
-  last, l             Show recently completed tasks
+  last, l [-a]        Show recently completed tasks (-a for all)
   validate, v         Validate plan.json structure
 
 Edit Commands:
@@ -248,7 +248,7 @@ def cmd_get(plan: dict, task_id: str, *, as_json: bool = False) -> None:
     print()
 
 
-def cmd_last(plan: dict, count: int = 5, *, as_json: bool = False) -> None:
+def cmd_last(plan: dict, count: int | None = 5, *, as_json: bool = False) -> None:
     """Display recently completed tasks."""
     completed_tasks = []
 

@@ -1276,6 +1276,20 @@ class TestCLIMain:
         captured = capsys.readouterr()
         assert "Recently Completed" in captured.out
 
+    def test_main_last_with_all(self, sample_plan_file, capsys, monkeypatch):
+        """Test last command with --all flag."""
+        monkeypatch.setattr(sys, "argv", ["pv", "-f", str(sample_plan_file), "last", "--all"])
+        cli.main()
+        captured = capsys.readouterr()
+        assert "Recently Completed" in captured.out
+
+    def test_main_last_with_all_short(self, sample_plan_file, capsys, monkeypatch):
+        """Test last command with -a flag."""
+        monkeypatch.setattr(sys, "argv", ["pv", "-f", str(sample_plan_file), "last", "-a"])
+        cli.main()
+        captured = capsys.readouterr()
+        assert "Recently Completed" in captured.out
+
     def test_main_validate(self, sample_plan_file, capsys, monkeypatch):
         """Test validate command via CLI."""
         monkeypatch.setattr(sys, "argv", ["pv", "-f", str(sample_plan_file), "validate"])

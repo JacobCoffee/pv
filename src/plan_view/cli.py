@@ -149,6 +149,7 @@ def main() -> None:
 
     last_p = subparsers.add_parser("last", aliases=["l"], add_help=False)
     last_p.add_argument("-n", "--count", type=int, default=5)
+    last_p.add_argument("-a", "--all", action="store_true")
     last_p.add_argument("--json", action="store_true", default=None)
 
     subparsers.add_parser("help", aliases=["h"], add_help=False)
@@ -266,7 +267,7 @@ def main() -> None:
         case "get" | "g":
             cmd_get(plan, args.id, as_json=as_json)
         case "last" | "l":
-            cmd_last(plan, args.count, as_json=as_json)
+            cmd_last(plan, None if args.all else args.count, as_json=as_json)
         case "validate" | "v":
             cmd_validate(plan, args.file, as_json=as_json)
         case _:
