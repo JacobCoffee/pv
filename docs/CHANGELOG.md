@@ -2,7 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
-## [unreleased]
+## [1.1.1](https://github.com/JacobCoffee/pv/compare/v1.1.0..v1.1.1) - 2025-12-21
+
+
+### Bug Fixes
+
+
+- **(cd)** checkout main branch for changelog workflow - ([b262a39](https://github.com/JacobCoffee/pv/commit/b262a390e54a25adb77f02e24aecc0eb3f55c442)) - Jacob Coffee
+
+### Miscellaneous Chores
+
+
+- bump version to 1.1.1 - ([1b7f829](https://github.com/JacobCoffee/pv/commit/1b7f8298b67ca73f6245d7dbbb9f40d56f43138d)) - Jacob Coffee
+## [1.1.0](https://github.com/JacobCoffee/pv/compare/v1.0.1..v1.1.0) - 2025-12-21
 
 
 ### Bug Fixes
@@ -10,11 +22,40 @@ All notable changes to this project will be documented in this file.
 
 - **(ci)** checkout main branch in changelog workflow - ([9bd7e56](https://github.com/JacobCoffee/pv/commit/9bd7e5692fa6d40d73d4ae76ed88bc1183b330c7)) - Jacob Coffee
 - **(ci)** explicitly set remote URL with token in changelog workflow - ([255742c](https://github.com/JacobCoffee/pv/commit/255742ce76dc3e6763e185563671c793378fae0e)) - Jacob Coffee
+- **(ci)** use --current instead of --unreleased for release notes - ([c72eaa7](https://github.com/JacobCoffee/pv/commit/c72eaa799f726f383664d224b839cf98bf8ce10c)) - Jacob Coffee
+- move return to else block per TRY300 lint rule - ([9d51c07](https://github.com/JacobCoffee/pv/commit/9d51c0731eac1ddba372e24566d9aed3ba73240f)) - Jacob Coffee
+
+
+### Documentation
+
+
+- regenerate changelog for v1.0.1 - ([e305677](https://github.com/JacobCoffee/pv/commit/e3056771d5d9a42fe44250bd377021591c64ab1f)) - github-actions[bot]
+
+- overhaul documentation and add examples - ([39cd895](https://github.com/JacobCoffee/pv/commit/39cd89536dccdc50d4dc66fed39462f52d458934)) - Jacob Coffee
+
+
+### Features
+
+
+- add bugs/deferred display commands and smart task creation - ([121f2b4](https://github.com/JacobCoffee/pv/commit/121f2b40eb305f0b6bd7e5c791d98472f700018c)) - Jacob Coffee
+
+
+### Miscellaneous Chores
+
+
+- bump version to 1.1.0 - ([c60b717](https://github.com/JacobCoffee/pv/commit/c60b717bd3698a2abeaf800dc66904d67cf1f852)) - Jacob Coffee
+
 
 ### Revert
 
 
 - undo cd.yml workflow changes - ([173e2ab](https://github.com/JacobCoffee/pv/commit/173e2abca501f8045d5ffedf44db6af9ee726ddf)) - Jacob Coffee
+
+
+### Tests
+
+
+- add tests for special phase creation and achieve 100% coverage - ([2d97ed9](https://github.com/JacobCoffee/pv/commit/2d97ed94d9508b2b216b49adfe9dedbcdedd37c7)) - Jacob Coffee
 ## [1.0.1](https://github.com/JacobCoffee/pv/compare/v1.0.0..v1.0.1) - 2025-12-21
 
 
