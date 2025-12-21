@@ -16,25 +16,29 @@ def _ensure_special_phases(plan: dict) -> bool:
     modified = False
 
     if "deferred" not in phase_ids:
-        phases.append({
-            "id": "deferred",
-            "name": "Deferred",
-            "description": "Tasks postponed for later consideration",
-            "status": "pending",
-            "progress": {"completed": 0, "total": 0, "percentage": 0},
-            "tasks": [],
-        })
+        phases.append(
+            {
+                "id": "deferred",
+                "name": "Deferred",
+                "description": "Tasks postponed for later consideration",
+                "status": "pending",
+                "progress": {"completed": 0, "total": 0, "percentage": 0},
+                "tasks": [],
+            }
+        )
         modified = True
 
     if "99" not in phase_ids:
-        phases.append({
-            "id": "99",
-            "name": "Bugs",
-            "description": "Tasks identified as bugs requiring fixes",
-            "status": "pending",
-            "progress": {"completed": 0, "total": 0, "percentage": 0},
-            "tasks": [],
-        })
+        phases.append(
+            {
+                "id": "99",
+                "name": "Bugs",
+                "description": "Tasks identified as bugs requiring fixes",
+                "status": "pending",
+                "progress": {"completed": 0, "total": 0, "percentage": 0},
+                "tasks": [],
+            }
+        )
         modified = True
 
     return modified
@@ -55,10 +59,11 @@ def load_plan(path: Path, *, auto_migrate: bool = False) -> dict | None:
         # Auto-add missing bugs/deferred phases for legacy plans
         if _ensure_special_phases(plan) and auto_migrate:
             save_plan(path, plan)
-        return plan
     except json.JSONDecodeError as e:
         print(f"Error: Invalid JSON in {path}: {e}", file=sys.stderr)
         return None
+    else:
+        return plan
 
 
 def save_plan(path: Path, plan: dict) -> None:
