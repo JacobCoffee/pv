@@ -6,7 +6,7 @@ from pathlib import Path
 
 import jsonschema
 
-from plan_view.formatting import bold, bold_cyan, bold_yellow, dim, get_status_icon, green
+from plan_view.formatting import ICONS, bold, bold_cyan, bold_yellow, dim, green
 from plan_view.io import load_schema
 from plan_view.state import find_task, get_current_phase, get_next_task, task_to_dict
 
@@ -63,7 +63,7 @@ def cmd_overview(plan: dict, *, as_json: bool = False) -> None:
     for phase in plan.get("phases", []):
         progress = phase.get("progress", {})
         phase_pct = progress.get("percentage", 0)
-        icon = get_status_icon(phase["status"])
+        icon = ICONS.get(phase["status"], "❓")
         phase_id = phase["id"]
         phase_name = phase["name"]
         phase_desc = phase["description"]
@@ -72,7 +72,7 @@ def cmd_overview(plan: dict, *, as_json: bool = False) -> None:
         print(f"   {phase_desc}\n")
 
         for task in phase.get("tasks", []):
-            t_icon = get_status_icon(task["status"])
+            t_icon = ICONS.get(task["status"], "❓")
             task_id = task["id"]
             task_title = task["title"]
             agent = task.get("agent_type") or "general"
@@ -124,7 +124,7 @@ def cmd_current(plan: dict, *, as_json: bool = False) -> None:
         print(f"   {phase_desc}\n")
 
         for task in current.get("tasks", []):
-            icon = get_status_icon(task["status"])
+            icon = ICONS.get(task["status"], "❓")
             task_id = task["id"]
             task_title = task["title"]
             agent = task.get("agent_type") or "general"
@@ -155,7 +155,7 @@ def cmd_next(plan: dict, *, as_json: bool = False) -> None:
         print(json.dumps(task_to_dict(phase, task), indent=2))
         return
 
-    icon = get_status_icon(task["status"])
+    icon = ICONS.get(task["status"], "❓")
     agent = task.get("agent_type") or "general-purpose"
     task_id = task["id"]
     task_title = task["title"]
@@ -200,7 +200,7 @@ def cmd_phase(plan: dict, *, as_json: bool = False) -> None:
     print(f"   Progress: {pct:.0f}% ({completed}/{total} tasks)\n")
 
     for task in phase.get("tasks", []):
-        icon = get_status_icon(task["status"])
+        icon = ICONS.get(task["status"], "❓")
         task_id = task["id"]
         task_title = task["title"]
         agent = task.get("agent_type") or "general"
@@ -228,7 +228,7 @@ def cmd_get(plan: dict, task_id: str, *, as_json: bool = False) -> None:
         print(json.dumps(task_to_dict(phase, task), indent=2))
         return
 
-    icon = get_status_icon(task["status"])
+    icon = ICONS.get(task["status"], "❓")
     agent = task.get("agent_type") or "general-purpose"
     tracking = task.get("tracking", {})
 

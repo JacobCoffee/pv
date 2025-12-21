@@ -13,7 +13,7 @@ ICONS = {
     "skipped": "⏭️",
 }
 
-VALID_STATUSES = ("pending", "in_progress", "completed", "blocked", "skipped")
+VALID_STATUSES = tuple(ICONS)
 
 # ANSI colors
 RESET = "\033[0m"
@@ -77,8 +77,3 @@ def bold_yellow(text: str) -> str:
 def now_iso() -> str:
     """Return current UTC time in ISO 8601 format."""
     return datetime.now(UTC).isoformat().replace("+00:00", "Z")
-
-
-def get_status_icon(status: str) -> str:
-    """Return emoji icon for a task status."""
-    return ICONS.get(status, "❓")

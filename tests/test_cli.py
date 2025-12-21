@@ -199,29 +199,29 @@ class TestUtilities:
 
         datetime.fromisoformat(result)
 
-    def test_get_status_icon_completed(self):
+    def test_icons_completed(self):
         """Test status icon for completed."""
-        assert cli.get_status_icon("completed") == "\u2705"
+        assert cli.ICONS.get("completed") == "\u2705"
 
-    def test_get_status_icon_in_progress(self):
+    def test_icons_in_progress(self):
         """Test status icon for in_progress."""
-        assert cli.get_status_icon("in_progress") == "\U0001f504"
+        assert cli.ICONS.get("in_progress") == "\U0001f504"
 
-    def test_get_status_icon_pending(self):
+    def test_icons_pending(self):
         """Test status icon for pending."""
-        assert cli.get_status_icon("pending") == "\u23f3"
+        assert cli.ICONS.get("pending") == "\u23f3"
 
-    def test_get_status_icon_blocked(self):
+    def test_icons_blocked(self):
         """Test status icon for blocked."""
-        assert cli.get_status_icon("blocked") == "\U0001f6d1"
+        assert cli.ICONS.get("blocked") == "\U0001f6d1"
 
-    def test_get_status_icon_skipped(self):
+    def test_icons_skipped(self):
         """Test status icon for skipped."""
-        assert cli.get_status_icon("skipped") == "\u23ed\ufe0f"
+        assert cli.ICONS.get("skipped") == "\u23ed\ufe0f"
 
-    def test_get_status_icon_unknown(self):
-        """Test status icon for unknown status returns question mark."""
-        assert cli.get_status_icon("unknown") == "\u2753"
+    def test_icons_unknown(self):
+        """Test unknown status returns None (use default)."""
+        assert cli.ICONS.get("unknown", "❓") == "❓"
 
 
 class TestErrorSuggestions:

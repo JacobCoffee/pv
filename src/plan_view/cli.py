@@ -41,7 +41,6 @@ from plan_view.formatting import (
     bold_cyan,
     bold_yellow,
     dim,
-    get_status_icon,
     green,
     now_iso,
 )
@@ -74,7 +73,6 @@ __all__ = [
     "bold_cyan",
     "bold_yellow",
     "now_iso",
-    "get_status_icon",
     # I/O
     "load_plan",
     "save_plan",
