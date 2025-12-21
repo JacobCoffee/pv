@@ -26,6 +26,7 @@ jobs:
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           fetch-depth: 0
+          ref: main
           token: ${{ secrets.CHANGELOG_PAT }}
           persist-credentials: true
 
@@ -35,14 +36,14 @@ jobs:
           config: pyproject.toml
           args: --verbose
         env:
-          OUTPUT: CHANGELOG.md
+          OUTPUT: docs/CHANGELOG.md
           GITHUB_REPO: ${{ github.repository }}
 
       - name: Commit and push changelog
         env:
           TAG: ${{ inputs.tag || github.ref_name }}
         run: |
-          if git diff --quiet CHANGELOG.md; then
+          if git diff --quiet docs/CHANGELOG.md; then
             echo "No changes to commit"
             exit 0
           fi
@@ -50,6 +51,6 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
 
-          git add CHANGELOG.md
+          git add docs/CHANGELOG.md
           git commit -m "docs: regenerate changelog for ${TAG}"
           git push origin main
