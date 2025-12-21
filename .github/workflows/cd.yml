@@ -27,6 +27,7 @@ jobs:
         with:
           fetch-depth: 0
           token: ${{ secrets.CHANGELOG_PAT }}
+          persist-credentials: true
 
       - name: Generate changelog
         uses: orhun/git-cliff-action@e16f179f0be49ecdfe63753837f20b9531642772 # v4.7.0
