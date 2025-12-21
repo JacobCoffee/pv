@@ -141,8 +141,10 @@
         "agent_type": {"$ref": "#/definitions/agent_type"},
         "business_plan_ref": {"$ref": "#/definitions/business_plan_ref"},
         "depends_on": {
+          "description": "Task IDs this task depends on (must be completed first)",
           "type": "array",
-          "items": {"type": "string"}
+          "items": {"type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$"},
+          "uniqueItems": true
         },
         "subtasks": {
           "type": "array",
