@@ -47,6 +47,9 @@ def get_current_phase(plan: dict) -> dict | None:
 
 def get_next_task(plan: dict) -> tuple[dict, dict] | None:
     """Find the next actionable task with all dependencies met."""
+    # Build task status lookup for O(1) dependency checks
+    task_status = {t["id"]: t["status"] for p in plan.get("phases", []) for t in p.get("tasks", [])}
+
     for phase in plan.get("phases", []):
         if phase["status"] in ("completed", "skipped"):
             continue
@@ -55,14 +58,7 @@ def get_next_task(plan: dict) -> tuple[dict, dict] | None:
                 return phase, task
             if task["status"] == "pending":
                 deps = task.get("depends_on", [])
-                all_deps_met = True
-                for dep in deps:
-                    for p in plan.get("phases", []):
-                        for t in p.get("tasks", []):
-                            if t["id"] == dep and t["status"] != "completed":
-                                all_deps_met = False
-                                break
-                if all_deps_met:
+                if all(task_status.get(dep) == "completed" for dep in deps):
                     return phase, task
     return None
 
