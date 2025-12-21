@@ -103,6 +103,7 @@ Installation
    :hidden:
    :caption: Project
 
+   CHANGELOG
    GitHub <https://github.com/JacobCoffee/pv>
 
 
