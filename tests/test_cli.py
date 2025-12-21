@@ -844,6 +844,104 @@ class TestEditCommands:
         plan = json.loads(sample_plan_file.read_text())
         assert plan["phases"][1]["tasks"][0]["status"] == "skipped"
 
+    def test_cmd_defer(self, sample_plan_file, capsys):
+        """Test defer command moves task to deferred phase."""
+        args = Namespace(file=sample_plan_file, id="1.1.1")
+        cli.cmd_defer(args)
+        captured = capsys.readouterr()
+        assert "deferred" in captured.out
+        plan = json.loads(sample_plan_file.read_text())
+        # Task should be removed from original phase
+        assert len(plan["phases"][1]["tasks"]) == 1
+        # Deferred phase should exist with the task
+        deferred = next(p for p in plan["phases"] if p["id"] == "deferred")
+        assert len(deferred["tasks"]) == 1
+        assert deferred["tasks"][0]["title"] == "Feature X"
+        assert deferred["tasks"][0]["id"] == "deferred.1.1"
+
+    def test_cmd_defer_creates_phase(self, sample_plan_file, capsys):
+        """Test defer creates deferred phase if it doesn't exist."""
+        plan = json.loads(sample_plan_file.read_text())
+        assert not any(p["id"] == "deferred" for p in plan["phases"])
+        args = Namespace(file=sample_plan_file, id="1.1.1")
+        cli.cmd_defer(args)
+        plan = json.loads(sample_plan_file.read_text())
+        assert any(p["id"] == "deferred" for p in plan["phases"])
+
+    def test_cmd_defer_uses_existing_phase(self, sample_plan_file, capsys):
+        """Test defer reuses existing deferred phase and increments ID."""
+        # Defer first task
+        args = Namespace(file=sample_plan_file, id="1.1.1")
+        cli.cmd_defer(args)
+        # Defer second task
+        args = Namespace(file=sample_plan_file, id="1.1.2")
+        cli.cmd_defer(args)
+        plan = json.loads(sample_plan_file.read_text())
+        deferred = next(p for p in plan["phases"] if p["id"] == "deferred")
+        assert len(deferred["tasks"]) == 2
+        # Second task should have incremented ID
+        assert deferred["tasks"][1]["id"] == "deferred.1.2"
+
+    def test_cmd_defer_handles_malformed_ids(self, tmp_plan_path, capsys):
+        """Test defer handles existing tasks with malformed IDs."""
+        plan = {
+            "meta": {
+                "project": "Test",
+                "version": "1.0.0",
+                "created_at": "2025-01-01T00:00:00Z",
+                "updated_at": "2025-01-01T00:00:00Z",
+                "business_plan_path": ".claude/BUSINESS_PLAN.md",
+            },
+            "summary": {},
+            "phases": [
+                {
+                    "id": "0",
+                    "name": "Test",
+                    "description": "Test",
+                    "status": "pending",
+                    "progress": {"completed": 0, "total": 1, "percentage": 0},
+                    "tasks": [
+                        {"id": "0.1.1", "title": "Task", "status": "pending",
+                         "agent_type": None, "depends_on": [], "tracking": {}},
+                    ],
+                },
+                {
+                    "id": "deferred",
+                    "name": "Deferred",
+                    "description": "Deferred tasks",
+                    "status": "pending",
+                    "progress": {"completed": 0, "total": 2, "percentage": 0},
+                    "tasks": [
+                        {"id": "short", "title": "Short ID", "status": "pending",
+                         "agent_type": None, "depends_on": [], "tracking": {}},
+                        {"id": "deferred.x.y", "title": "Non-numeric", "status": "pending",
+                         "agent_type": None, "depends_on": [], "tracking": {}},
+                    ],
+                },
+            ],
+        }
+        tmp_plan_path.write_text(json.dumps(plan))
+        args = Namespace(file=tmp_plan_path, id="0.1.1")
+        cli.cmd_defer(args)
+        result = json.loads(tmp_plan_path.read_text())
+        deferred = next(p for p in result["phases"] if p["id"] == "deferred")
+        # Should still work, defaulting to 1 for the new task
+        assert deferred["tasks"][2]["id"] == "deferred.1.1"
+
+    def test_cmd_defer_task_not_found(self, sample_plan_file, capsys):
+        """Test defer with non-existent task fails."""
+        args = Namespace(file=sample_plan_file, id="99.99.99")
+        with pytest.raises(SystemExit):
+            cli.cmd_defer(args)
+        captured = capsys.readouterr()
+        assert "not found" in captured.err
+
+    def test_cmd_defer_file_not_found(self, tmp_path, capsys):
+        """Test defer with non-existent file fails."""
+        args = Namespace(file=tmp_path / "nonexistent.json", id="0.1.1")
+        with pytest.raises(SystemExit):
+            cli.cmd_defer(args)
+
     def test_cmd_rm_task(self, sample_plan_file, capsys):
         """Test removing a task."""
         args = Namespace(file=sample_plan_file, type="task", id="0.1.1")
@@ -1105,6 +1203,13 @@ class TestCLIMain:
         cli.main()
         captured = capsys.readouterr()
         assert "skipped" in captured.out
+
+    def test_main_defer(self, sample_plan_file, capsys, monkeypatch):
+        """Test defer command via CLI."""
+        monkeypatch.setattr(sys, "argv", ["pv", "-f", str(sample_plan_file), "defer", "1.1.1"])
+        cli.main()
+        captured = capsys.readouterr()
+        assert "deferred" in captured.out
 
     def test_main_rm_task(self, sample_plan_file, capsys, monkeypatch):
         """Test rm task command via CLI."""

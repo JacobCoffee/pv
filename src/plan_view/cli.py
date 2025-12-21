@@ -8,6 +8,7 @@ from plan_view.commands.edit import (
     cmd_add_phase,
     cmd_add_task,
     cmd_block,
+    cmd_defer,
     cmd_done,
     cmd_init,
     cmd_rm,
@@ -102,6 +103,7 @@ __all__ = [
     "cmd_start",
     "cmd_block",
     "cmd_skip",
+    "cmd_defer",
     "cmd_rm",
     # Entry point
     "main",
@@ -189,6 +191,9 @@ def main() -> None:
     skip_p = subparsers.add_parser("skip", add_help=False)
     skip_p.add_argument("id")
 
+    defer_p = subparsers.add_parser("defer", add_help=False)
+    defer_p.add_argument("id")
+
     # Remove
     rm_p = subparsers.add_parser("rm", add_help=False)
     rm_p.add_argument("type", choices=["phase", "task"])
@@ -226,6 +231,9 @@ def main() -> None:
             return
         case "skip":
             cmd_skip(args)
+            return
+        case "defer":
+            cmd_defer(args)
             return
         case "rm":
             cmd_rm(args)

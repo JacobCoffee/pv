@@ -174,6 +174,58 @@ def cmd_skip(args: argparse.Namespace) -> None:
     cmd_set(args)
 
 
+def cmd_defer(args: argparse.Namespace) -> None:
+    """Move task to deferred phase."""
+    path = args.file
+    plan = load_plan(path)
+    if plan is None:
+        sys.exit(1)
+    assert plan is not None
+
+    result = find_task(plan, args.id)
+    if result is None:
+        print(f"Error: Task '{args.id}' not found", file=sys.stderr)
+        sys.exit(1)
+    assert result is not None
+
+    old_phase, task = result
+
+    # Find or create deferred phase
+    deferred = find_phase(plan, "deferred")
+    if deferred is None:
+        deferred = {
+            "id": "deferred",
+            "name": "Deferred",
+            "description": "Tasks postponed for later consideration",
+            "status": "pending",
+            "progress": {"completed": 0, "total": 0, "percentage": 0},
+            "tasks": [],
+        }
+        plan["phases"].append(deferred)
+
+    # Remove from old phase
+    old_phase["tasks"].remove(task)
+    old_id = task["id"]
+
+    # Generate new ID for deferred phase
+    existing_tasks = deferred.get("tasks", [])
+    max_task = 0
+    for t in existing_tasks:
+        parts = t["id"].split(".")
+        if len(parts) >= 3:
+            try:
+                max_task = max(max_task, int(parts[2]))
+            except ValueError:
+                pass
+    new_id = f"deferred.1.{max_task + 1}"
+    task["id"] = new_id
+
+    # Add to deferred phase
+    deferred["tasks"].append(task)
+    save_plan(path, plan)
+    print(f"✅ [{old_id}] → [{new_id}] (deferred)")
+
+
 def cmd_rm(args: argparse.Namespace) -> None:
     """Remove a phase or task."""
     path = args.file

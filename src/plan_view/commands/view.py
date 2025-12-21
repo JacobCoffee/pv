@@ -31,6 +31,7 @@ Edit Commands:
   start ID            Mark task as in_progress
   block ID            Mark task as blocked
   skip ID             Mark task as skipped
+  defer ID            Move task to deferred phase
   rm TYPE ID          Remove a phase or task
 
 Options:
