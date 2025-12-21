@@ -1305,6 +1305,21 @@ class TestCLIMain:
         captured = capsys.readouterr()
         assert "Recently Completed" in captured.out
 
+    def test_main_summary(self, sample_plan_file, capsys, monkeypatch):
+        """Test summary command via CLI."""
+        monkeypatch.setattr(sys, "argv", ["pv", "-f", str(sample_plan_file), "summary"])
+        cli.main()
+        captured = capsys.readouterr()
+        assert "total_tasks" in captured.out
+        assert "overall_progress" in captured.out
+
+    def test_main_s_alias(self, sample_plan_file, capsys, monkeypatch):
+        """Test s alias for summary."""
+        monkeypatch.setattr(sys, "argv", ["pv", "-f", str(sample_plan_file), "s"])
+        cli.main()
+        captured = capsys.readouterr()
+        assert "total_tasks" in captured.out
+
     def test_main_validate(self, sample_plan_file, capsys, monkeypatch):
         """Test validate command via CLI."""
         monkeypatch.setattr(sys, "argv", ["pv", "-f", str(sample_plan_file), "validate"])

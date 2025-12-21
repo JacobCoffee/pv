@@ -20,6 +20,7 @@ View Commands:
   phase, p            Show current phase details
   get, g ID           Show a specific task by ID
   last, l [-a]        Show recently completed tasks (-a for all)
+  summary, s          Show plan summary (always JSON)
   validate, v         Validate plan.json structure
 
 Edit Commands:
@@ -293,6 +294,18 @@ def cmd_last(plan: dict, count: int | None = 5, *, as_json: bool = False) -> Non
         print(f"   ✅ [{task_id}] {task_title}")
         print(f"      {dim(f'{phase_name} · {time_str}')}")
     print()
+
+
+def cmd_summary(plan: dict) -> None:
+    """Output lightweight JSON summary of plan progress."""
+    meta = plan.get("meta", {})
+    summary = plan.get("summary", {})
+    output = {
+        "project": meta.get("project"),
+        "version": meta.get("version"),
+        **summary,
+    }
+    print(json.dumps(output))
 
 
 def cmd_validate(plan: dict, path: Path, *, as_json: bool = False) -> None:
