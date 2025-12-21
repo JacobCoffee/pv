@@ -136,6 +136,103 @@ class TestQuietFlag:
         assert captured.out == ""
 
 
+class TestDryRun:
+    """Tests for --dry-run flag."""
+
+    def test_dry_run_done(self, sample_plan_file, capsys):
+        """Test --dry-run shows Would: prefix and doesn't save."""
+        # Get original status first
+        plan = cli.load_plan(sample_plan_file)
+        result = cli.find_task(plan, "0.1.2")
+        assert result is not None
+        _, task = result
+        original_status = task["status"]
+
+        args = Namespace(file=sample_plan_file, id="0.1.2", quiet=False, dry_run=True)
+        cli.cmd_done(args)
+        captured = capsys.readouterr()
+        assert "Would:" in captured.out
+
+        # Verify task status wasn't changed
+        plan = cli.load_plan(sample_plan_file)
+        result = cli.find_task(plan, "0.1.2")
+        assert result is not None
+        _, task = result
+        assert task["status"] == original_status
+
+    def test_dry_run_via_cli(self, sample_plan_file, capsys, monkeypatch):
+        """Test -d flag via CLI."""
+        monkeypatch.setattr(sys, "argv", ["pv", "-f", str(sample_plan_file), "done", "0.1.2", "-d"])
+        cli.main()
+        captured = capsys.readouterr()
+        assert "Would:" in captured.out
+
+    def test_dry_run_add_phase(self, sample_plan_file, capsys):
+        """Test --dry-run for add-phase doesn't save."""
+        args = Namespace(file=sample_plan_file, name="Test Phase", desc=None, quiet=False, dry_run=True)
+        cli.cmd_add_phase(args)
+        captured = capsys.readouterr()
+        assert "Would:" in captured.out
+        # Verify phase wasn't actually added
+        plan = cli.load_plan(sample_plan_file)
+        assert cli.find_phase(plan, "2") is None
+
+    def test_dry_run_init(self, tmp_path, capsys):
+        """Test --dry-run for init doesn't create file."""
+        plan_file = tmp_path / "plan.json"
+        args = Namespace(file=plan_file, name="Test", force=False, quiet=False, dry_run=True)
+        cli.cmd_init(args)
+        captured = capsys.readouterr()
+        assert "Would:" in captured.out
+        assert not plan_file.exists()
+
+    def test_dry_run_add_task(self, sample_plan_file, capsys):
+        """Test --dry-run for add-task doesn't save."""
+        plan_before = cli.load_plan(sample_plan_file)
+        task_count_before = len(plan_before["phases"][0]["tasks"])
+
+        args = Namespace(
+            file=sample_plan_file, phase="0", title="Test Task", agent=None, deps=None, quiet=False, dry_run=True
+        )
+        cli.cmd_add_task(args)
+        captured = capsys.readouterr()
+        assert "Would:" in captured.out
+
+        plan_after = cli.load_plan(sample_plan_file)
+        assert len(plan_after["phases"][0]["tasks"]) == task_count_before
+
+    def test_dry_run_defer(self, sample_plan_file, capsys):
+        """Test --dry-run for defer doesn't save."""
+        args = Namespace(file=sample_plan_file, id="0.1.1", quiet=False, dry_run=True)
+        cli.cmd_defer(args)
+        captured = capsys.readouterr()
+        assert "Would:" in captured.out
+        # Task should still be in original phase
+        plan = cli.load_plan(sample_plan_file)
+        result = cli.find_task(plan, "0.1.1")
+        assert result is not None
+
+    def test_dry_run_rm_task(self, sample_plan_file, capsys):
+        """Test --dry-run for rm task doesn't save."""
+        args = Namespace(file=sample_plan_file, type="task", id="0.1.1", quiet=False, dry_run=True)
+        cli.cmd_rm(args)
+        captured = capsys.readouterr()
+        assert "Would:" in captured.out
+        # Task should still exist
+        plan = cli.load_plan(sample_plan_file)
+        assert cli.find_task(plan, "0.1.1") is not None
+
+    def test_dry_run_rm_phase(self, sample_plan_file, capsys):
+        """Test --dry-run for rm phase doesn't save."""
+        args = Namespace(file=sample_plan_file, type="phase", id="1", quiet=False, dry_run=True)
+        cli.cmd_rm(args)
+        captured = capsys.readouterr()
+        assert "Would:" in captured.out
+        # Phase should still exist
+        plan = cli.load_plan(sample_plan_file)
+        assert cli.find_phase(plan, "1") is not None
+
+
 class TestNoColor:
     """Tests for NO_COLOR environment variable support."""
 

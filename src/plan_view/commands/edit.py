@@ -14,6 +14,16 @@ from plan_view.state import (
 )
 
 
+def _is_dry_run(args: argparse.Namespace) -> bool:
+    """Check if dry-run mode is enabled."""
+    return getattr(args, "dry_run", False)
+
+
+def _prefix(args: argparse.Namespace) -> str:
+    """Return message prefix based on dry-run mode."""
+    return "Would:" if _is_dry_run(args) else "✅"
+
+
 def cmd_init(args: argparse.Namespace) -> None:
     """Create a new plan.json."""
     path = args.file
@@ -38,9 +48,10 @@ def cmd_init(args: argparse.Namespace) -> None:
         "phases": [],
     }
 
-    save_plan(path, plan)
+    if not _is_dry_run(args):
+        save_plan(path, plan)
     if not getattr(args, "quiet", False):
-        print(f"✅ Created {path} for '{args.name}'")
+        print(f"{_prefix(args)} Created {path} for '{args.name}'")
 
 
 def cmd_add_phase(args: argparse.Namespace) -> None:
@@ -65,9 +76,10 @@ def cmd_add_phase(args: argparse.Namespace) -> None:
     }
 
     plan["phases"].append(phase)
-    save_plan(path, plan)
+    if not _is_dry_run(args):
+        save_plan(path, plan)
     if not getattr(args, "quiet", False):
-        print(f"✅ Added Phase {next_id}: {args.name}")
+        print(f"{_prefix(args)} Added Phase {next_id}: {args.name}")
 
 
 def cmd_add_task(args: argparse.Namespace) -> None:
@@ -114,9 +126,10 @@ def cmd_add_task(args: argparse.Namespace) -> None:
     }
 
     phase["tasks"].append(task)
-    save_plan(path, plan)
+    if not _is_dry_run(args):
+        save_plan(path, plan)
     if not getattr(args, "quiet", False):
-        print(f"✅ Added [{next_id}] {args.title}")
+        print(f"{_prefix(args)} Added [{next_id}] {args.title}")
 
 
 def cmd_set(args: argparse.Namespace) -> None:
@@ -153,9 +166,10 @@ def cmd_set(args: argparse.Namespace) -> None:
         print(f"Error: Unknown field '{args.field}'. Use: status, agent, title", file=sys.stderr)
         sys.exit(1)
 
-    save_plan(path, plan)
+    if not _is_dry_run(args):
+        save_plan(path, plan)
     if not getattr(args, "quiet", False):
-        print(f"✅ [{args.id}] {args.field} → {args.value}")
+        print(f"{_prefix(args)} [{args.id}] {args.field} → {args.value}")
 
 
 def cmd_done(args: argparse.Namespace) -> None:
@@ -237,9 +251,10 @@ def cmd_defer(args: argparse.Namespace) -> None:
     task_list = deferred["tasks"]
     assert isinstance(task_list, list)
     task_list.append(task)
-    save_plan(path, plan)
+    if not _is_dry_run(args):
+        save_plan(path, plan)
     if not getattr(args, "quiet", False):
-        print(f"✅ [{old_id}] → [{new_id}] (deferred)")
+        print(f"{_prefix(args)} [{old_id}] → [{new_id}] (deferred)")
 
 
 def cmd_rm(args: argparse.Namespace) -> None:
@@ -259,9 +274,10 @@ def cmd_rm(args: argparse.Namespace) -> None:
         assert result is not None
         phase, task = result
         phase["tasks"].remove(task)
-        save_plan(path, plan)
+        if not _is_dry_run(args):
+            save_plan(path, plan)
         if not getattr(args, "quiet", False):
-            print(f"✅ Removed task [{args.id}]")
+            print(f"{_prefix(args)} Removed task [{args.id}]")
 
     else:  # args.type == "phase" (argparse enforces this)
         phase = find_phase(plan, args.id)
@@ -271,6 +287,7 @@ def cmd_rm(args: argparse.Namespace) -> None:
             sys.exit(1)
         assert phase is not None
         plan["phases"].remove(phase)
-        save_plan(path, plan)
+        if not _is_dry_run(args):
+            save_plan(path, plan)
         if not getattr(args, "quiet", False):
-            print(f"✅ Removed phase {args.id}")
+            print(f"{_prefix(args)} Removed phase {args.id}")

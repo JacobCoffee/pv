@@ -39,6 +39,7 @@ Options:
   -f, --file FILE     Path to plan.json (default: ./plan.json)
   --json              Output as JSON (view commands only)
   -q, --quiet         Suppress output (edit commands only)
+  -d, --dry-run       Show what would change without saving
   -h, --help          Show this help message
 """
 
