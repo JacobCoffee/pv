@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.2](https://github.com/JacobCoffee/pv/compare/v1.1.1..v1.1.2) - 2025-12-21
+
+
+### Documentation
+
+
+- regenerate changelog for v1.1.1 - ([3fbc9d8](https://github.com/JacobCoffee/pv/commit/3fbc9d8d76c3bdc08272867c6ee921749ac1836f)) - github-actions[bot]
+
+- add changelog to navigation - ([a6c164c](https://github.com/JacobCoffee/pv/commit/a6c164c1f661f3c1a1bfd41809fee1166730bda7)) - Jacob Coffee
+
+
+### Miscellaneous Chores
+
+
+- bump version to 1.1.2 - ([39d8acc](https://github.com/JacobCoffee/pv/commit/39d8acc80f88ddf4070e8f7a3ed3c75d54eb8f93)) - Jacob Coffee
 ## [1.1.1](https://github.com/JacobCoffee/pv/compare/v1.1.0..v1.1.1) - 2025-12-21
 
 
