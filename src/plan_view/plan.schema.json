@@ -130,6 +130,10 @@
         "status": {"$ref": "#/definitions/status"}
       }
     },
+    "priority": {
+      "type": ["string", "null"],
+      "enum": [null, "low", "medium", "high"]
+    },
     "task": {
       "type": "object",
       "required": ["id", "title", "status", "agent_type", "depends_on", "tracking"],
@@ -137,6 +141,7 @@
         "id": {"type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$"},
         "title": {"type": "string"},
         "status": {"$ref": "#/definitions/status"},
+        "priority": {"$ref": "#/definitions/priority"},
         "agent_type": {"$ref": "#/definitions/agent_type"},
         "business_plan_ref": {"$ref": "#/definitions/business_plan_ref"},
         "depends_on": {
