@@ -8,7 +8,7 @@ import jsonschema
 
 from pv_tool.formatting import bold, bold_cyan, bold_yellow, dim, get_status_icon, green
 from pv_tool.io import load_schema
-from pv_tool.state import get_current_phase, get_next_task, task_to_dict
+from pv_tool.state import find_task, get_current_phase, get_next_task, task_to_dict
 
 HELP_TEXT = """\
 View and edit plan.json for task tracking
@@ -210,8 +210,6 @@ def cmd_phase(plan: dict, *, as_json: bool = False) -> None:
 
 def cmd_get(plan: dict, task_id: str, *, as_json: bool = False) -> None:
     """Display a specific task by ID."""
-    from pv_tool.state import find_task
-
     result = find_task(plan, task_id)
     if not result:
         if as_json:
