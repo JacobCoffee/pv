@@ -328,8 +328,6 @@ class TestErrorSuggestions:
 
     def test_format_task_suggestions(self, sample_plan):
         """Test task suggestions formatting."""
-        from plan_view.state import format_task_suggestions
-
         result = format_task_suggestions(sample_plan)
         assert "Available tasks:" in result
         assert "0.1.1" in result
@@ -337,8 +335,6 @@ class TestErrorSuggestions:
 
     def test_format_task_suggestions_empty(self):
         """Test task suggestions with no tasks."""
-        from plan_view.state import format_task_suggestions
-
         empty = {"phases": []}
         result = format_task_suggestions(empty)
         assert "No tasks found" in result

@@ -4,15 +4,12 @@ import argparse
 import sys
 from collections.abc import Callable
 from functools import wraps
-from typing import Concatenate, ParamSpec, TypeVar
+from typing import Concatenate
 
 from plan_view.io import load_plan
 
-P = ParamSpec("P")
-R = TypeVar("R")
 
-
-def require_plan(
+def require_plan[**P, R](
     func: Callable[Concatenate[dict, argparse.Namespace, P], R],
 ) -> Callable[Concatenate[argparse.Namespace, P], R]:
     """Decorator to load plan from args.file and inject it as first argument.
