@@ -9,6 +9,9 @@ A plan.json file contains:
 - **meta**: Project metadata
 - **summary**: Calculated progress statistics
 - **phases**: Array of phases, each containing tasks
+- **decisions**: Pending and resolved decisions (optional)
+- **success_metrics**: Target metrics (optional)
+- **blockers**: Active blockers (optional)
 
 ## Minimal Example
 
@@ -18,7 +21,8 @@ A plan.json file contains:
     "project": "My Project",
     "version": "1.0.0",
     "created_at": "2024-01-01T00:00:00Z",
-    "updated_at": "2024-01-01T00:00:00Z"
+    "updated_at": "2024-01-01T00:00:00Z",
+    "business_plan_path": "docs/plan.md"
   },
   "summary": {
     "total_phases": 1,
@@ -38,6 +42,7 @@ A plan.json file contains:
           "id": "0.1.1",
           "title": "Initialize project",
           "status": "pending",
+          "agent_type": null,
           "depends_on": [],
           "tracking": {}
         }
@@ -47,21 +52,28 @@ A plan.json file contains:
 }
 ```
 
-## Full Schema
+## JSON Schema Reference
 
-See `examples/complex.json` for a complete example with all optional fields.
+The canonical schema that `pv validate` uses:
 
-## Meta Object
+```{literalinclude} ../../src/plan_view/plan.schema.json
+:language: json
+```
+
+## Quick Reference
+
+### Meta Object
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `project` | string | Yes | Project name |
-| `version` | string | Yes | Plan version (semver) |
+| `version` | string | Yes | Plan version (semver: `X.Y.Z`) |
+| `schema_version` | string | No | Schema version for migrations |
 | `created_at` | string | Yes | ISO 8601 creation timestamp |
 | `updated_at` | string | Yes | ISO 8601 last update timestamp |
-| `business_plan_path` | string | No | Path to business plan document |
+| `business_plan_path` | string | Yes | Path to business plan document |
 
-## Summary Object
+### Summary Object
 
 Automatically calculated by pv when saving:
 
@@ -70,9 +82,11 @@ Automatically calculated by pv when saving:
 | `total_phases` | integer | Number of phases |
 | `total_tasks` | integer | Total tasks across all phases |
 | `completed_tasks` | integer | Number of completed tasks |
+| `in_progress_tasks` | integer | Currently active tasks |
+| `blocked_tasks` | integer | Blocked tasks |
 | `overall_progress` | number | Percentage complete (0-100) |
 
-## Phase Object
+### Phase Object
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
@@ -80,27 +94,59 @@ Automatically calculated by pv when saving:
 | `name` | string | Yes | Phase name |
 | `description` | string | Yes | Phase description |
 | `status` | string | Yes | pending, in_progress, completed, blocked, skipped |
-| `progress` | object | Yes | Calculated progress for this phase |
+| `progress` | object | Yes | `{completed, total, percentage}` |
 | `tasks` | array | Yes | Array of task objects |
 
-### Special Phase IDs
+#### Special Phase IDs
 
 - `deferred`: Tasks postponed for later consideration
 - `99`: Bug tracking phase (convention)
 
-## Task Object
+### Task Object
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `id` | string | Yes | Unique task ID (format: `phase.section.task`) |
+| `id` | string | Yes | Task ID format: `phase.section.task` |
 | `title` | string | Yes | Task title |
 | `status` | string | Yes | pending, in_progress, completed, blocked, skipped |
-| `agent_type` | string | No | Agent type for the task |
-| `depends_on` | array | Yes | Array of task IDs this task depends on |
-| `tracking` | object | Yes | Timestamps for started_at and completed_at |
-| `priority` | string | No | critical, high, medium, low |
-| `estimated_minutes` | integer | No | Estimated time to complete |
+| `agent_type` | string/null | Yes | Agent type or null |
+| `depends_on` | array | Yes | Task IDs this depends on |
+| `tracking` | object | Yes | Timestamps and metadata |
+| `priority` | string/null | No | null, low, medium, high |
+| `estimated_minutes` | integer/null | No | Estimated time |
 | `subtasks` | array | No | Nested subtask objects |
+| `business_plan_ref` | object/null | No | Reference to business plan section |
+
+### Tracking Object
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `started_at` | string/null | ISO 8601 start timestamp |
+| `completed_at` | string/null | ISO 8601 completion timestamp |
+| `time_spent_minutes` | integer/null | Actual time spent |
+| `notes` | string/null | Free-form notes |
+| `attempts` | integer | Number of attempts (default: 0) |
+| `last_error` | string/null | Last error message |
+| `assigned_agent_id` | string/null | Agent instance ID |
+
+### Valid Statuses
+
+| Status | Meaning |
+|--------|---------|
+| `pending` | Not started |
+| `in_progress` | Currently being worked on |
+| `completed` | Finished successfully |
+| `blocked` | Cannot proceed |
+| `skipped` | Intentionally skipped |
+
+### Priority Values
+
+| Priority | Meaning |
+|----------|---------|
+| `null` | No priority set (default) |
+| `low` | Low priority |
+| `medium` | Medium priority |
+| `high` | High priority |
 
 ## Task ID Format
 
@@ -111,16 +157,6 @@ Task IDs follow the pattern `phase.section.task`:
 1.2.3  -> Phase 1, section 2, task 3
 99.1.5 -> Bugs phase, section 1, task 5
 ```
-
-## Valid Statuses
-
-| Status | Meaning |
-|--------|---------|
-| `pending` | Not started |
-| `in_progress` | Currently being worked on |
-| `completed` | Finished successfully |
-| `blocked` | Cannot proceed |
-| `skipped` | Intentionally skipped |
 
 ## Auto-Calculated Fields
 
@@ -166,7 +202,7 @@ Agent types are flexible strings. Common conventions:
 | `software-architect` | Architecture decisions |
 | `python-tester` | Testing tasks |
 
-Any kebab-case string is valid: `^[a-z][a-z0-9-]*$`
+Any non-empty string is valid, or `null` for unassigned.
 
 ## Example Files
 

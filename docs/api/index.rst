@@ -1,29 +1,87 @@
 API Reference
 =============
 
-This section contains the complete API documentation for plan-view, generated from
-source code docstrings.
+Complete API documentation for plan-view, generated from source code docstrings.
 
-Module Overview
+----
+
+CLI Entry Point
 ---------------
 
-plan_view
-^^^^^^^^^
+The main CLI module that dispatches to view and edit commands.
 
-The main package for plan-view.
+.. automodule:: plan_view.cli
+   :members: main
+   :undoc-members:
 
-.. automodule:: plan_view
+----
+
+View Commands
+-------------
+
+Commands for reading and displaying plan data.
+
+.. automodule:: plan_view.commands.view
    :members:
    :undoc-members:
    :show-inheritance:
 
+----
 
-plan_view.cli
-^^^^^^^^^^^^^
+Edit Commands
+-------------
 
-Command-line interface module.
+Commands for modifying plan data.
 
-.. automodule:: plan_view.cli
+.. automodule:: plan_view.commands.edit
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+----
+
+I/O
+---
+
+Plan loading, saving, and validation.
+
+.. automodule:: plan_view.io
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+----
+
+State
+-----
+
+Plan state management and task lookup.
+
+.. automodule:: plan_view.state
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+----
+
+Formatting
+----------
+
+Terminal output formatting and styling.
+
+.. automodule:: plan_view.formatting
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+----
+
+Decorators
+----------
+
+CLI decorator utilities.
+
+.. automodule:: plan_view.decorators
    :members:
    :undoc-members:
    :show-inheritance:
