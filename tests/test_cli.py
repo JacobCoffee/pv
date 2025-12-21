@@ -3,6 +3,7 @@
 import json
 import sys
 from argparse import Namespace
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from io import StringIO
 from unittest.mock import patch
@@ -1773,3 +1774,70 @@ class TestEdgeCases:
         assert "\u23f3" in captured.out  # pending
         assert "\U0001f6d1" in captured.out  # blocked
         assert "\u23ed" in captured.out  # skipped
+
+
+class TestConcurrency:
+    """Tests for concurrent file access and race conditions."""
+
+    def test_concurrent_reads(self, sample_plan_file):
+        """Test multiple concurrent reads don't cause errors."""
+
+        def read_plan():
+            return cli.load_plan(sample_plan_file)
+
+        with ThreadPoolExecutor(max_workers=5) as executor:
+            futures = [executor.submit(read_plan) for _ in range(10)]
+            results = [f.result() for f in futures]
+
+        # All reads should succeed and return same data
+        assert all(r is not None for r in results)
+        assert all(r["meta"]["project"] == results[0]["meta"]["project"] for r in results)
+
+    def test_sequential_writes(self, sample_plan_file):
+        """Test sequential writes don't corrupt data."""
+        for i in range(5):
+            plan = cli.load_plan(sample_plan_file)
+            assert plan is not None
+            result = cli.find_task(plan, "0.1.1")
+            if result:
+                _, task = result
+                task["tracking"]["notes"] = f"Update {i}"
+                cli.save_plan(sample_plan_file, plan)
+
+        # File should still be valid JSON
+        final = cli.load_plan(sample_plan_file)
+        assert final is not None
+        assert "phases" in final
+        result = cli.find_task(final, "0.1.1")
+        assert result is not None
+        _, task = result
+        assert task["tracking"]["notes"] == "Update 4"
+
+    def test_read_after_write(self, sample_plan_file):
+        """Test reads immediately after writes are consistent."""
+        for i in range(5):
+            plan = cli.load_plan(sample_plan_file)
+            assert plan is not None
+            plan["meta"]["version"] = f"1.0.{i}"
+            cli.save_plan(sample_plan_file, plan)
+
+            # Immediately read back
+            reloaded = cli.load_plan(sample_plan_file)
+            assert reloaded is not None
+            assert reloaded["meta"]["version"] == f"1.0.{i}"
+
+    def test_rapid_status_changes_sequential(self, sample_plan_file):
+        """Test rapid sequential status changes don't corrupt data."""
+        statuses = ["pending", "in_progress", "completed", "blocked", "pending"]
+
+        for status in statuses:
+            args = Namespace(file=sample_plan_file, id="0.1.1", field="status", value=status, quiet=True, dry_run=False)
+            cli.cmd_set(args)
+
+        # Verify file is still valid
+        plan = cli.load_plan(sample_plan_file)
+        assert plan is not None
+        result = cli.find_task(plan, "0.1.1")
+        assert result is not None
+        _, task = result
+        assert task["status"] == "pending"  # Last status in list
