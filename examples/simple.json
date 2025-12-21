@@ -1,0 +1,128 @@
+{
+  "meta": {
+    "project": "API Backend",
+    "version": "1.0.0",
+    "created_at": "2024-01-15T09:00:00Z",
+    "updated_at": "2024-01-15T14:30:00Z",
+    "business_plan_path": ""
+  },
+  "summary": {
+    "total_phases": 3,
+    "total_tasks": 5,
+    "completed_tasks": 2,
+    "overall_progress": 40.0
+  },
+  "phases": [
+    {
+      "id": "0",
+      "name": "Setup",
+      "description": "Project initialization and configuration",
+      "status": "completed",
+      "progress": {
+        "completed": 2,
+        "total": 2,
+        "percentage": 100.0
+      },
+      "tasks": [
+        {
+          "id": "0.1.1",
+          "title": "Initialize repository",
+          "status": "completed",
+          "agent_type": "github-git-expert",
+          "depends_on": [],
+          "tracking": {
+            "started_at": "2024-01-15T09:00:00Z",
+            "completed_at": "2024-01-15T09:15:00Z"
+          }
+        },
+        {
+          "id": "0.1.2",
+          "title": "Configure CI/CD pipeline",
+          "status": "completed",
+          "agent_type": "github-git-expert",
+          "depends_on": ["0.1.1"],
+          "tracking": {
+            "started_at": "2024-01-15T09:15:00Z",
+            "completed_at": "2024-01-15T10:00:00Z"
+          }
+        }
+      ]
+    },
+    {
+      "id": "1",
+      "name": "Core Features",
+      "description": "Implement primary application features",
+      "status": "in_progress",
+      "progress": {
+        "completed": 0,
+        "total": 2,
+        "percentage": 0.0
+      },
+      "tasks": [
+        {
+          "id": "1.1.1",
+          "title": "Create user authentication",
+          "status": "in_progress",
+          "agent_type": "python-backend-engineer",
+          "depends_on": ["0.1.2"],
+          "tracking": {
+            "started_at": "2024-01-15T10:00:00Z"
+          }
+        },
+        {
+          "id": "1.1.2",
+          "title": "Build REST API endpoints",
+          "status": "pending",
+          "agent_type": "python-backend-engineer",
+          "depends_on": ["1.1.1"],
+          "tracking": {}
+        }
+      ]
+    },
+    {
+      "id": "2",
+      "name": "Testing",
+      "description": "Test coverage and validation",
+      "status": "pending",
+      "progress": {
+        "completed": 0,
+        "total": 1,
+        "percentage": 0.0
+      },
+      "tasks": [
+        {
+          "id": "2.1.1",
+          "title": "Write unit tests",
+          "status": "pending",
+          "agent_type": "python-tester",
+          "depends_on": ["1.1.2"],
+          "tracking": {}
+        }
+      ]
+    },
+    {
+      "id": "deferred",
+      "name": "Deferred",
+      "description": "Tasks postponed for later consideration",
+      "status": "pending",
+      "progress": {
+        "completed": 0,
+        "total": 0,
+        "percentage": 0
+      },
+      "tasks": []
+    },
+    {
+      "id": "99",
+      "name": "Bugs",
+      "description": "Tasks identified as bugs requiring fixes",
+      "status": "pending",
+      "progress": {
+        "completed": 0,
+        "total": 0,
+        "percentage": 0
+      },
+      "tasks": []
+    }
+  ]
+}

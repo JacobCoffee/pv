@@ -1,94 +1,119 @@
-# pv - Plan Viewer
+# pv
 
-Pretty print and edit `plan.json` for task tracking.
+A command-line tool for viewing and editing `plan.json` task tracking files.
 
 ## Installation
 
 ```bash
-# Global install with uv
-uv tool install git+https://github.com/JacobCoffee/pv
-
-# Or from local checkout
-make install
-# or: uv tool install . --force --reinstall --python 3.14
+uv tool install plan-view
 ```
 
-## Usage
-
-### View Commands
+## Quick Start
 
 ```bash
-pv                  # Full plan overview
-pv c, current       # Completed summary + current phase + next task
-pv n, next          # Show next pending/in-progress task
-pv p, phase         # Current phase with all tasks + dependencies
-pv g, get ID        # Show a specific task by ID
-pv l, last          # Show recently completed tasks
-pv v, validate      # Validate plan.json against schema
-pv h, help          # Show help
+# Create a new plan
+pv init "My Project"
+
+# Add phases and tasks
+pv add-phase "Setup" --desc "Initial configuration"
+pv add-task 0 "Initialize repository" --agent github-git-expert
+
+# Track progress
+pv start 0.1.1
+pv done 0.1.1
+
+# View status
+pv current
 ```
 
-### Edit Commands
+## Commands
 
-```bash
-pv init "Project Name"                    # Create new plan.json
-pv add-phase "Auth" --desc "User auth"    # Add a phase
-pv add-task 1 "Create model" --agent X    # Add task to phase 1
-pv start 1.1.1                            # Mark task in_progress
-pv done 1.1.1                             # Mark task completed
-pv set 1.1.1 status blocked               # Set any status
-pv set 1.1.1 agent python-backend-engineer
-pv rm task 1.1.1                          # Remove a task
-pv rm phase 2                             # Remove a phase
-```
+### View
+
+| Command | Description |
+|---------|-------------|
+| `pv` | Full plan overview |
+| `pv current` | Current phase and next task |
+| `pv next` | Next actionable task |
+| `pv phase` | Current phase details |
+| `pv get <id>` | Show task or phase by ID |
+| `pv last` | Recently completed tasks |
+| `pv summary` | Progress summary |
+| `pv bugs` | Show bugs phase |
+| `pv deferred` | Show deferred phase |
+| `pv validate` | Validate against schema |
+
+### Edit
+
+| Command | Description |
+|---------|-------------|
+| `pv init <name>` | Create new plan.json |
+| `pv add-phase <name>` | Add a phase |
+| `pv add-task <phase> <title>` | Add a task |
+| `pv done <id>` | Mark completed |
+| `pv start <id>` | Mark in progress |
+| `pv block <id>` | Mark blocked |
+| `pv skip <id>` | Mark skipped |
+| `pv defer <id>` | Move to deferred |
+| `pv bug <id>` | Move to bugs |
+| `pv set <id> <field> <value>` | Set task field |
+| `pv rm task <id>` | Remove task |
+| `pv rm phase <id>` | Remove phase |
 
 ### Options
 
-```bash
-pv -f other.json current    # Use different file
-pv current --json           # Output as JSON (all view commands)
-pv --json current           # Same thing
-pv last -n 10               # Show last 10 completed tasks
-pv init "Name" --force      # Overwrite existing plan.json
+| Option | Description |
+|--------|-------------|
+| `-f, --file` | Specify plan file path |
+| `--json` | JSON output (view commands) |
+| `-q, --quiet` | Suppress output (edit commands) |
+| `-d, --dry-run` | Preview changes without saving |
+
+## Example Output
+
+```
+$ pv -f examples/simple.json current
+
+API Backend v1.0.0
+Progress: 40% (2/5 tasks)
+
+Phase 0: Setup (100%)
+Phase 1: Core Features (0%)
+   Create user authentication
+   Build REST API endpoints
+
+Next: [1.1.1] Create user authentication
 ```
 
-## Example
+## JSON Output
+
+All view commands support `--json` for programmatic access:
 
 ```bash
-$ pv init "My App"
-✅ Created plan.json for 'My App'
-
-$ pv add-phase "Setup" --desc "Project setup"
-✅ Added Phase 0: Setup
-
-$ pv add-task 0 "Initialize repo" --agent github-git-expert
-✅ Added [0.1.1] Initialize repo
-
-$ pv done 0.1.1
-✅ [0.1.1] status → completed
-
-$ pv c
-📋 My App v1.0.0
-Progress: 100% (1/1 tasks)
-
-✅ Phase 0: Setup (100%)
-
-$ pv g 0.1.1 --json
+$ pv next --json
 {
-  "id": "0.1.1",
-  "title": "Initialize repo",
-  "status": "completed",
-  ...
+  "id": "1.1.1",
+  "title": "Create user authentication",
+  "status": "in_progress",
+  "phase_id": "1",
+  "phase_name": "Core Features",
+  "agent_type": "python-backend-engineer",
+  "depends_on": ["0.1.2"]
 }
 ```
 
 ## Features
 
-- Auto-calculates progress percentages
-- Updates phase status based on task completion
-- Tracks `started_at` and `completed_at` timestamps
-- Validates against plan.json schema
-- JSON output for all view commands (`--json`)
+- Automatic progress calculation
+- Dependency-aware task ordering
+- Partial task ID matching (`pv done 1` matches `1.1.1` if unique)
+- Schema validation
+- NO_COLOR/FORCE_COLOR environment variable support
+- Dry-run mode for previewing changes
+
+## Documentation
+
+See the [full documentation](https://jacobcoffee.github.io/pv/) for detailed usage.
 
 ## License
 

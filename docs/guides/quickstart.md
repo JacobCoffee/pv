@@ -1,22 +1,22 @@
 # Quickstart
 
-Get up and running with pv in under a minute.
+Get started with pv in under a minute.
 
 ## Installation
 
 Install pv globally using uv:
 
 ```bash
-uv tool install git+https://github.com/JacobCoffee/pv
+uv tool install plan-view
 ```
 
-Or via pip:
+Or install from PyPI:
 
 ```bash
 pip install plan-view
 ```
 
-## Create Your First Plan
+## Create a Plan
 
 Initialize a new plan.json:
 
@@ -24,24 +24,10 @@ Initialize a new plan.json:
 pv init "My Project"
 ```
 
-This creates a `plan.json` file in your current directory with the basic structure:
+Output:
 
-```json
-{
-  "meta": {
-    "project": "My Project",
-    "version": "1.0.0",
-    "created_at": "2024-01-01T00:00:00Z",
-    "updated_at": "2024-01-01T00:00:00Z"
-  },
-  "summary": {
-    "total_phases": 0,
-    "total_tasks": 0,
-    "completed_tasks": 0,
-    "overall_progress": 0
-  },
-  "phases": []
-}
+```
+Created plan.json for 'My Project'
 ```
 
 ## Add Phases and Tasks
@@ -57,7 +43,7 @@ Add tasks to the phase:
 ```bash
 pv add-task 0 "Create repository" --agent github-git-expert
 pv add-task 0 "Set up CI/CD" --agent github-git-expert
-pv add-task 0 "Configure linting" --agent coder
+pv add-task 0 "Configure linting"
 ```
 
 ## Track Progress
@@ -76,26 +62,45 @@ pv done 0.1.1
 
 ## View Your Plan
 
-See the full overview:
+See the current status:
 
 ```bash
-pv
+pv current
 ```
 
+Output:
+
 ```
-📋 My Project v1.0.0
+My Project v1.0.0
 Progress: 33% (1/3 tasks)
 
-🔄 Phase 0: Setup (33%)
+Phase 0: Setup (33%)
    Project initialization tasks
 
-   ✅ [0.1.1] Create repository (github-git-expert)
-   ⏳ [0.1.2] Set up CI/CD (github-git-expert)
-   ⏳ [0.1.3] Configure linting (coder)
+   [0.1.1] Create repository (github-git-expert)
+   [0.1.2] Set up CI/CD (github-git-expert)
+   [0.1.3] Configure linting
+
+Next: [0.1.2] Set up CI/CD
 ```
 
-## What's Next?
+## Using the Examples
 
-- Check out the [CLI Reference](cli.md) for all available commands
-- Learn about the [Plan Schema](schema.md) for advanced usage
+The repository includes example plan files. Try them:
+
+```bash
+# View a simple project plan
+pv -f examples/simple.json
+
+# Check the next task
+pv -f examples/simple.json next
+
+# View a more complex project
+pv -f examples/complex.json current
+```
+
+## Next Steps
+
+- See the [CLI Reference](cli.md) for all available commands
+- Learn about the [Plan Schema](schema.md) for the file structure
 - Use `pv --json` for machine-readable output in scripts

@@ -1,0 +1,306 @@
+{
+  "schema_version": "1.0.0",
+  "meta": {
+    "project": "E-Commerce Platform",
+    "version": "2.0.0",
+    "created_at": "2024-01-01T08:00:00Z",
+    "updated_at": "2024-01-20T16:45:00Z",
+    "business_plan_path": ".claude/BUSINESS_PLAN.md"
+  },
+  "summary": {
+    "total_phases": 7,
+    "total_tasks": 16,
+    "completed_tasks": 8,
+    "overall_progress": 50.0
+  },
+  "phases": [
+    {
+      "id": "0",
+      "name": "Infrastructure",
+      "description": "Cloud infrastructure and deployment setup",
+      "status": "completed",
+      "progress": {
+        "completed": 3,
+        "total": 3,
+        "percentage": 100.0
+      },
+      "tasks": [
+        {
+          "id": "0.1.1",
+          "title": "Provision AWS resources",
+          "status": "completed",
+          "agent_type": "software-architect",
+          "priority": "high",
+          "depends_on": [],
+          "tracking": {
+            "started_at": "2024-01-01T08:00:00Z",
+            "completed_at": "2024-01-01T12:00:00Z"
+          }
+        },
+        {
+          "id": "0.1.2",
+          "title": "Configure Kubernetes cluster",
+          "status": "completed",
+          "agent_type": "software-architect",
+          "priority": "high",
+          "depends_on": ["0.1.1"],
+          "tracking": {
+            "started_at": "2024-01-01T12:00:00Z",
+            "completed_at": "2024-01-02T10:00:00Z"
+          }
+        },
+        {
+          "id": "0.1.3",
+          "title": "Set up monitoring and alerting",
+          "status": "completed",
+          "agent_type": "software-architect",
+          "priority": "high",
+          "depends_on": ["0.1.2"],
+          "tracking": {
+            "started_at": "2024-01-02T10:00:00Z",
+            "completed_at": "2024-01-02T15:00:00Z"
+          }
+        }
+      ]
+    },
+    {
+      "id": "1",
+      "name": "Database Layer",
+      "description": "Data models and persistence",
+      "status": "completed",
+      "progress": {
+        "completed": 2,
+        "total": 2,
+        "percentage": 100.0
+      },
+      "tasks": [
+        {
+          "id": "1.1.1",
+          "title": "Design database schema",
+          "status": "completed",
+          "agent_type": "software-architect",
+          "priority": "high",
+          "depends_on": [],
+          "tracking": {
+            "started_at": "2024-01-03T09:00:00Z",
+            "completed_at": "2024-01-03T14:00:00Z"
+          }
+        },
+        {
+          "id": "1.1.2",
+          "title": "Implement ORM models",
+          "status": "completed",
+          "agent_type": "python-backend-engineer",
+          "priority": "high",
+          "depends_on": ["1.1.1"],
+          "tracking": {
+            "started_at": "2024-01-03T14:00:00Z",
+            "completed_at": "2024-01-04T11:00:00Z"
+          }
+        }
+      ]
+    },
+    {
+      "id": "2",
+      "name": "Authentication",
+      "description": "User authentication and authorization",
+      "status": "completed",
+      "progress": {
+        "completed": 3,
+        "total": 3,
+        "percentage": 100.0
+      },
+      "tasks": [
+        {
+          "id": "2.1.1",
+          "title": "Implement JWT authentication",
+          "status": "completed",
+          "agent_type": "python-backend-engineer",
+          "priority": "high",
+          "depends_on": ["1.1.2"],
+          "tracking": {
+            "started_at": "2024-01-05T09:00:00Z",
+            "completed_at": "2024-01-05T16:00:00Z"
+          }
+        },
+        {
+          "id": "2.1.2",
+          "title": "Add OAuth2 provider support",
+          "status": "completed",
+          "agent_type": "python-backend-engineer",
+          "priority": "high",
+          "depends_on": ["2.1.1"],
+          "tracking": {
+            "started_at": "2024-01-06T09:00:00Z",
+            "completed_at": "2024-01-06T14:00:00Z"
+          }
+        },
+        {
+          "id": "2.1.3",
+          "title": "Implement role-based access control",
+          "status": "completed",
+          "agent_type": "python-backend-engineer",
+          "priority": "high",
+          "depends_on": ["2.1.1"],
+          "tracking": {
+            "started_at": "2024-01-06T14:00:00Z",
+            "completed_at": "2024-01-07T11:00:00Z"
+          }
+        }
+      ]
+    },
+    {
+      "id": "3",
+      "name": "Product Catalog",
+      "description": "Product management and search functionality",
+      "status": "in_progress",
+      "progress": {
+        "completed": 0,
+        "total": 3,
+        "percentage": 0.0
+      },
+      "tasks": [
+        {
+          "id": "3.1.1",
+          "title": "Build product CRUD endpoints",
+          "status": "in_progress",
+          "agent_type": "python-backend-engineer",
+          "priority": "high",
+          "estimated_minutes": 240,
+          "depends_on": ["2.1.3"],
+          "tracking": {
+            "started_at": "2024-01-08T09:00:00Z"
+          }
+        },
+        {
+          "id": "3.1.2",
+          "title": "Implement Elasticsearch integration",
+          "status": "pending",
+          "agent_type": "python-backend-engineer",
+          "priority": "high",
+          "estimated_minutes": 180,
+          "depends_on": ["3.1.1"],
+          "tracking": {}
+        },
+        {
+          "id": "3.1.3",
+          "title": "Add image upload and processing",
+          "status": "pending",
+          "agent_type": "python-backend-engineer",
+          "priority": "medium",
+          "estimated_minutes": 120,
+          "depends_on": ["3.1.1"],
+          "tracking": {}
+        }
+      ]
+    },
+    {
+      "id": "4",
+      "name": "Checkout Flow",
+      "description": "Shopping cart and payment processing",
+      "status": "pending",
+      "progress": {
+        "completed": 0,
+        "total": 3,
+        "percentage": 0.0
+      },
+      "tasks": [
+        {
+          "id": "4.1.1",
+          "title": "Implement shopping cart",
+          "status": "pending",
+          "agent_type": "python-backend-engineer",
+          "priority": "high",
+          "estimated_minutes": 180,
+          "depends_on": ["3.1.1"],
+          "tracking": {}
+        },
+        {
+          "id": "4.1.2",
+          "title": "Integrate Stripe payment gateway",
+          "status": "pending",
+          "agent_type": "python-backend-engineer",
+          "priority": "high",
+          "estimated_minutes": 240,
+          "depends_on": ["4.1.1"],
+          "tracking": {}
+        },
+        {
+          "id": "4.1.3",
+          "title": "Build order management system",
+          "status": "pending",
+          "agent_type": "python-backend-engineer",
+          "priority": "high",
+          "estimated_minutes": 180,
+          "depends_on": ["4.1.2"],
+          "tracking": {}
+        }
+      ]
+    },
+    {
+      "id": "deferred",
+      "name": "Deferred",
+      "description": "Tasks postponed for later consideration",
+      "status": "pending",
+      "progress": {
+        "completed": 0,
+        "total": 0,
+        "percentage": 0.0
+      },
+      "tasks": []
+    },
+    {
+      "id": "99",
+      "name": "Bugs",
+      "description": "Tasks identified as bugs requiring fixes",
+      "status": "in_progress",
+      "progress": {
+        "completed": 0,
+        "total": 2,
+        "percentage": 0.0
+      },
+      "tasks": [
+        {
+          "id": "99.1.1",
+          "title": "Fix session timeout handling",
+          "status": "in_progress",
+          "agent_type": "python-backend-engineer",
+          "priority": "high",
+          "depends_on": [],
+          "tracking": {
+            "started_at": "2024-01-20T14:00:00Z"
+          }
+        },
+        {
+          "id": "99.1.2",
+          "title": "Resolve race condition in cart updates",
+          "status": "pending",
+          "agent_type": "python-backend-engineer",
+          "priority": "high",
+          "depends_on": [],
+          "tracking": {}
+        }
+      ]
+    }
+  ],
+  "decisions": {
+    "pending": [
+      {
+        "id": "D1",
+        "question": "Which payment providers to support beyond Stripe?",
+        "options": ["PayPal", "Square", "Adyen"],
+        "recommended": "PayPal"
+      }
+    ],
+    "resolved": [
+      {
+        "id": "D0",
+        "question": "Database choice for product catalog",
+        "options": ["PostgreSQL", "MongoDB", "DynamoDB"],
+        "decision": "PostgreSQL with Elasticsearch for search",
+        "rationale": "PostgreSQL handles relational data well; Elasticsearch provides fast full-text search"
+      }
+    ]
+  },
+  "blockers": []
+}

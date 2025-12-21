@@ -1,6 +1,6 @@
 # Plan Schema
 
-Understanding the structure of plan.json files.
+Reference for the plan.json file structure.
 
 ## Overview
 
@@ -10,45 +10,36 @@ A plan.json file contains:
 - **summary**: Calculated progress statistics
 - **phases**: Array of phases, each containing tasks
 
-## Full Schema
+## Minimal Example
 
 ```json
 {
   "meta": {
-    "project": "Project Name",
+    "project": "My Project",
     "version": "1.0.0",
     "created_at": "2024-01-01T00:00:00Z",
-    "updated_at": "2024-01-01T00:00:00Z",
-    "business_plan_path": ".claude/BUSINESS_PLAN.md"
+    "updated_at": "2024-01-01T00:00:00Z"
   },
   "summary": {
-    "total_phases": 3,
-    "total_tasks": 10,
-    "completed_tasks": 5,
-    "overall_progress": 50.0
+    "total_phases": 1,
+    "total_tasks": 1,
+    "completed_tasks": 0,
+    "overall_progress": 0
   },
   "phases": [
     {
       "id": "0",
-      "name": "Phase Name",
-      "description": "Phase description",
-      "status": "in_progress",
-      "progress": {
-        "completed": 2,
-        "total": 4,
-        "percentage": 50.0
-      },
+      "name": "Setup",
+      "description": "Initial setup",
+      "status": "pending",
+      "progress": { "completed": 0, "total": 1, "percentage": 0 },
       "tasks": [
         {
           "id": "0.1.1",
-          "title": "Task title",
-          "status": "completed",
-          "agent_type": "python-backend-engineer",
+          "title": "Initialize project",
+          "status": "pending",
           "depends_on": [],
-          "tracking": {
-            "started_at": "2024-01-01T10:00:00Z",
-            "completed_at": "2024-01-01T11:00:00Z"
-          }
+          "tracking": {}
         }
       ]
     }
@@ -56,15 +47,19 @@ A plan.json file contains:
 }
 ```
 
+## Full Schema
+
+See `examples/complex.json` for a complete example with all optional fields.
+
 ## Meta Object
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `project` | string | Project name |
-| `version` | string | Plan version (semver) |
-| `created_at` | string | ISO 8601 creation timestamp |
-| `updated_at` | string | ISO 8601 last update timestamp |
-| `business_plan_path` | string | Optional path to business plan doc |
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `project` | string | Yes | Project name |
+| `version` | string | Yes | Plan version (semver) |
+| `created_at` | string | Yes | ISO 8601 creation timestamp |
+| `updated_at` | string | Yes | ISO 8601 last update timestamp |
+| `business_plan_path` | string | No | Path to business plan document |
 
 ## Summary Object
 
@@ -79,48 +74,57 @@ Automatically calculated by pv when saving:
 
 ## Phase Object
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `id` | string | Unique phase identifier (typically "0", "1", etc.) |
-| `name` | string | Phase name |
-| `description` | string | Phase description |
-| `status` | string | pending, in_progress, completed, blocked, skipped |
-| `progress` | object | Calculated progress for this phase |
-| `tasks` | array | Array of task objects |
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `id` | string | Yes | Unique phase identifier |
+| `name` | string | Yes | Phase name |
+| `description` | string | Yes | Phase description |
+| `status` | string | Yes | pending, in_progress, completed, blocked, skipped |
+| `progress` | object | Yes | Calculated progress for this phase |
+| `tasks` | array | Yes | Array of task objects |
+
+### Special Phase IDs
+
+- `deferred`: Tasks postponed for later consideration
+- `99`: Bug tracking phase (convention)
 
 ## Task Object
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `id` | string | Unique task ID (format: `phase.section.task`) |
-| `title` | string | Task title/description |
-| `status` | string | pending, in_progress, completed, blocked, skipped |
-| `agent_type` | string | Optional agent type for the task |
-| `depends_on` | array | Array of task IDs this task depends on |
-| `tracking` | object | Timestamps for started_at and completed_at |
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `id` | string | Yes | Unique task ID (format: `phase.section.task`) |
+| `title` | string | Yes | Task title |
+| `status` | string | Yes | pending, in_progress, completed, blocked, skipped |
+| `agent_type` | string | No | Agent type for the task |
+| `depends_on` | array | Yes | Array of task IDs this task depends on |
+| `tracking` | object | Yes | Timestamps for started_at and completed_at |
+| `priority` | string | No | critical, high, medium, low |
+| `estimated_minutes` | integer | No | Estimated time to complete |
+| `subtasks` | array | No | Nested subtask objects |
 
 ## Task ID Format
 
 Task IDs follow the pattern `phase.section.task`:
 
-- `0.1.1` - Phase 0, section 1, task 1
-- `1.2.3` - Phase 1, section 2, task 3
-
-This hierarchical format allows logical grouping within phases.
+```
+0.1.1  -> Phase 0, section 1, task 1
+1.2.3  -> Phase 1, section 2, task 3
+99.1.5 -> Bugs phase, section 1, task 5
+```
 
 ## Valid Statuses
 
 | Status | Meaning |
 |--------|---------|
-| `pending` | Not started, waiting |
+| `pending` | Not started |
 | `in_progress` | Currently being worked on |
 | `completed` | Finished successfully |
-| `blocked` | Cannot proceed (dependency/issue) |
+| `blocked` | Cannot proceed |
 | `skipped` | Intentionally skipped |
 
 ## Auto-Calculated Fields
 
-When you save a plan (via any edit command), pv automatically:
+When saving a plan (via any edit command), pv automatically:
 
 1. Updates `meta.updated_at` to current timestamp
 2. Recalculates `progress` for each phase
@@ -132,32 +136,48 @@ When you save a plan (via any edit command), pv automatically:
 Use `pv validate` to check your plan.json against the schema:
 
 ```bash
-pv validate
-# ✅ plan.json is valid
+$ pv validate
+plan.json is valid
 
-pv validate --json
-# {"valid": true, "path": "plan.json"}
+$ pv validate --json
+{"valid": true, "path": "plan.json"}
 ```
 
 Invalid plans show the specific error:
 
 ```bash
-pv validate
-# ❌ Validation failed for plan.json:
-#    'status' is a required property
-#    Path: phases.0.tasks.0
+$ pv validate
+Validation failed for plan.json:
+   'status' is a required property
+   Path: phases.0.tasks.0
 ```
 
 ## Agent Types
 
-Common agent types for AI workflows:
+Agent types are flexible strings. Common conventions:
 
-- `general-purpose` - Default, general tasks
-- `python-backend-engineer` - Python backend development
-- `ui-engineer` - Frontend/UI development
-- `github-git-expert` - Git operations, PR management
-- `documentation-expert` - Documentation tasks
-- `software-architect` - Architecture decisions
-- `python-tester` - Testing tasks
+| Type | Use Case |
+|------|----------|
+| `general-purpose` | Default, general tasks |
+| `python-backend-engineer` | Python backend development |
+| `ui-engineer` | Frontend/UI development |
+| `github-git-expert` | Git operations, PR management |
+| `documentation-expert` | Documentation tasks |
+| `software-architect` | Architecture decisions |
+| `python-tester` | Testing tasks |
 
-These are suggestions; you can use any string value.
+Any kebab-case string is valid: `^[a-z][a-z0-9-]*$`
+
+## Example Files
+
+The repository includes example plans:
+
+- `examples/simple.json`: Basic project with 3 phases, 5 tasks
+- `examples/complex.json`: Full-featured example with priorities, estimates, decisions
+
+Explore them:
+
+```bash
+pv -f examples/simple.json
+pv -f examples/complex.json summary
+```
