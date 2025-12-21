@@ -429,6 +429,39 @@ class TestFileIO:
         loaded = json.loads(tmp_plan_path.read_text())
         assert loaded["summary"]["total_tasks"] == 4
 
+    def test_load_plan_auto_migrate(self, tmp_plan_path):
+        """Test loading a legacy plan with auto_migrate adds special phases and saves."""
+        # Create a plan without special phases
+        legacy_plan = {
+            "meta": {
+                "project": "Legacy",
+                "version": "1.0.0",
+                "created_at": "2025-01-01T00:00:00Z",
+                "updated_at": "2025-01-01T00:00:00Z",
+                "business_plan_path": ".claude/BUSINESS_PLAN.md",
+            },
+            "summary": {"total_phases": 0, "total_tasks": 0, "completed_tasks": 0, "overall_progress": 0},
+            "phases": [],
+        }
+        tmp_plan_path.write_text(json.dumps(legacy_plan))
+
+        # Load with auto_migrate=True
+        from plan_view.io import load_plan
+
+        result = load_plan(tmp_plan_path, auto_migrate=True)
+        assert result is not None
+
+        # Special phases should be in memory
+        phase_ids = {p["id"] for p in result["phases"]}
+        assert "deferred" in phase_ids
+        assert "99" in phase_ids
+
+        # File should have been updated
+        saved = json.loads(tmp_plan_path.read_text())
+        saved_phase_ids = {p["id"] for p in saved["phases"]}
+        assert "deferred" in saved_phase_ids
+        assert "99" in saved_phase_ids
+
 
 # ============ PROGRESS CALCULATION ============
 
@@ -1253,6 +1286,36 @@ class TestEditCommands:
         assert deferred["status"] == "pending"
         assert deferred["tasks"] == []
 
+    def test_cmd_defer_creates_phase_if_missing(self, tmp_plan_path, capsys):
+        """Test defer creates deferred phase if called with plan missing it."""
+        from plan_view.commands.edit import cmd_defer
+
+        # Create a plan without the deferred phase (bypassing load_plan)
+        plan = {
+            "meta": {
+                "project": "Test",
+                "version": "1.0.0",
+                "created_at": "2025-01-01T00:00:00Z",
+                "updated_at": "2025-01-01T00:00:00Z",
+                "business_plan_path": ".claude/BUSINESS_PLAN.md",
+            },
+            "summary": {"total_phases": 0, "total_tasks": 0, "completed_tasks": 0, "overall_progress": 0},
+            "phases": [],
+        }
+        tmp_plan_path.write_text(json.dumps(plan))
+
+        # Call cmd_defer directly with the plan (simulating programmatic use)
+        args = Namespace(file=tmp_plan_path, id="Test deferred task")
+        # The decorated function will load the plan, but we test the fallback
+        # by importing and calling the underlying function
+        cmd_defer.__wrapped__(plan, args)
+
+        # Phase should have been created
+        deferred = next((p for p in plan["phases"] if p["id"] == "deferred"), None)
+        assert deferred is not None
+        assert deferred["name"] == "Deferred"
+        assert len(deferred["tasks"]) == 1
+
     def test_cmd_defer_uses_existing_phase(self, sample_plan_file, capsys):
         """Test defer reuses existing deferred phase and increments ID."""
         # Defer first task
@@ -1344,6 +1407,23 @@ class TestEditCommands:
         deferred = next(p for p in plan["phases"] if p["id"] == "deferred")
         new_task = next(t for t in deferred["tasks"] if t["title"] == "Investigate performance issue")
         assert new_task["status"] == "pending"
+
+    def test_cmd_defer_new_task_dry_run(self, sample_plan_file, capsys):
+        """Test defer dry-run for new task doesn't save."""
+        original = sample_plan_file.read_text()
+        args = Namespace(file=sample_plan_file, id="Dry run task", dry_run=True, quiet=False)
+        cli.cmd_defer(args)
+        captured = capsys.readouterr()
+        assert "Would:" in captured.out
+        # File should be unchanged
+        assert sample_plan_file.read_text() == original
+
+    def test_cmd_defer_new_task_quiet(self, sample_plan_file, capsys):
+        """Test defer quiet mode for new task suppresses output."""
+        args = Namespace(file=sample_plan_file, id="Quiet task", quiet=True)
+        cli.cmd_defer(args)
+        captured = capsys.readouterr()
+        assert captured.out == ""
 
     def test_cmd_defer_file_not_found(self, tmp_path, capsys):
         """Test defer with non-existent file fails."""

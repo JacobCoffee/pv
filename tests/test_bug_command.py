@@ -55,6 +55,34 @@ class TestBugCommand:
         assert bugs["status"] == "pending"
         assert bugs["tasks"] == []
 
+    def test_cmd_bug_creates_phase_if_missing(self, tmp_plan_path, capsys):
+        """Test bug creates bugs phase if called with plan missing it."""
+        from plan_view.commands.edit import cmd_bug
+
+        # Create a plan without the bugs phase (bypassing load_plan)
+        plan = {
+            "meta": {
+                "project": "Test",
+                "version": "1.0.0",
+                "created_at": "2025-01-01T00:00:00Z",
+                "updated_at": "2025-01-01T00:00:00Z",
+                "business_plan_path": ".claude/BUSINESS_PLAN.md",
+            },
+            "summary": {"total_phases": 0, "total_tasks": 0, "completed_tasks": 0, "overall_progress": 0},
+            "phases": [],
+        }
+        tmp_plan_path.write_text(json.dumps(plan))
+
+        # Call cmd_bug directly with the plan (simulating programmatic use)
+        args = Namespace(file=tmp_plan_path, id="Test bug task")
+        cmd_bug.__wrapped__(plan, args)
+
+        # Phase should have been created
+        bugs = next((p for p in plan["phases"] if p["id"] == "99"), None)
+        assert bugs is not None
+        assert bugs["name"] == "Bugs"
+        assert len(bugs["tasks"]) == 1
+
     def test_cmd_bug_uses_existing_phase(self, sample_plan_file, capsys):
         """Test bug reuses existing bugs phase and increments ID."""
         # Move first task to bugs
@@ -146,6 +174,23 @@ class TestBugCommand:
         bugs = next(p for p in plan["phases"] if p["id"] == "99")
         new_task = next(t for t in bugs["tasks"] if t["title"] == "Fix login validation bug")
         assert new_task["status"] == "pending"
+
+    def test_cmd_bug_new_task_dry_run(self, sample_plan_file, capsys):
+        """Test bug dry-run for new task doesn't save."""
+        original = sample_plan_file.read_text()
+        args = Namespace(file=sample_plan_file, id="Dry run bug", dry_run=True, quiet=False)
+        cli.cmd_bug(args)
+        captured = capsys.readouterr()
+        assert "Would:" in captured.out
+        # File should be unchanged
+        assert sample_plan_file.read_text() == original
+
+    def test_cmd_bug_new_task_quiet(self, sample_plan_file, capsys):
+        """Test bug quiet mode for new task suppresses output."""
+        args = Namespace(file=sample_plan_file, id="Quiet bug", quiet=True)
+        cli.cmd_bug(args)
+        captured = capsys.readouterr()
+        assert captured.out == ""
 
     def test_cmd_bug_file_not_found(self, tmp_path, capsys):
         """Test bug with non-existent file fails."""
