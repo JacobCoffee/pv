@@ -13,7 +13,7 @@ uv tool install git+https://github.com/JacobCoffee/pv
 Or via pip:
 
 ```bash
-pip install pv-tool
+pip install plan-view
 ```
 
 ## Create Your First Plan

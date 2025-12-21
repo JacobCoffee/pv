@@ -4,7 +4,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from pv_tool.commands.edit import (
+from plan_view.commands.edit import (
     cmd_add_phase,
     cmd_add_task,
     cmd_done,
@@ -13,7 +13,7 @@ from pv_tool.commands.edit import (
     cmd_set,
     cmd_start,
 )
-from pv_tool.commands.view import (
+from plan_view.commands.view import (
     HELP_TEXT,
     cmd_current,
     cmd_get,
@@ -25,7 +25,7 @@ from pv_tool.commands.view import (
 )
 
 # Re-export all public API for backward compatibility with tests
-from pv_tool.formatting import (
+from plan_view.formatting import (
     BOLD,
     CYAN,
     DIM,
@@ -42,8 +42,8 @@ from pv_tool.formatting import (
     green,
     now_iso,
 )
-from pv_tool.io import load_plan, load_schema, save_plan
-from pv_tool.state import (
+from plan_view.io import load_plan, load_schema, save_plan
+from plan_view.state import (
     find_phase,
     find_task,
     get_current_phase,

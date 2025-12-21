@@ -80,7 +80,7 @@ Installation
    uv tool install git+https://github.com/JacobCoffee/pv
 
    # Or install from PyPI
-   pip install pv-tool
+   pip install plan-view
 
 
 .. toctree::

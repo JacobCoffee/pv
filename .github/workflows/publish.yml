@@ -104,7 +104,7 @@ jobs:
       id-token: write
     environment:
       name: pypi
-      url: https://pypi.org/project/pv-tool/
+      url: https://pypi.org/project/plan-view/
     steps:
       # IMPORTANT: Use unsigned dist - sigstore files break PyPI upload
       - name: Download distribution artifacts

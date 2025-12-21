@@ -3,9 +3,9 @@
 import argparse
 import sys
 
-from pv_tool.formatting import VALID_STATUSES, now_iso
-from pv_tool.io import load_plan, save_plan
-from pv_tool.state import find_phase, find_task
+from plan_view.formatting import VALID_STATUSES, now_iso
+from plan_view.io import load_plan, save_plan
+from plan_view.state import find_phase, find_task
 
 
 def cmd_init(args: argparse.Namespace) -> None:

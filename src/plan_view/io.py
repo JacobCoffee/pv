@@ -5,8 +5,8 @@ import sys
 from importlib.resources import files
 from pathlib import Path
 
-from pv_tool.formatting import now_iso
-from pv_tool.state import recalculate_progress
+from plan_view.formatting import now_iso
+from plan_view.state import recalculate_progress
 
 
 def load_plan(path: Path) -> dict | None:
@@ -30,5 +30,5 @@ def save_plan(path: Path, plan: dict) -> None:
 
 def load_schema() -> dict:
     """Load the bundled JSON schema."""
-    schema_path = files("pv_tool").joinpath("plan.schema.json")
+    schema_path = files("plan_view").joinpath("plan.schema.json")
     return json.loads(schema_path.read_text())

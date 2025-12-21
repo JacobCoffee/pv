@@ -136,7 +136,7 @@ html_theme_options = {
     "accent_color": "teal",
     "github_url": "https://github.com/JacobCoffee/pv",
     "nav_links": [
-        {"title": "PyPI", "url": "https://pypi.org/project/pv-tool/"},
+        {"title": "PyPI", "url": "https://pypi.org/project/plan-view/"},
         {"title": "GitHub", "url": "https://github.com/JacobCoffee/pv"},
     ],
 }

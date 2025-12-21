@@ -38,7 +38,7 @@ docs = [
 ]
 
 [project.scripts]
-pv = "pv_tool.cli:main"
+pv = "plan_view.cli:main"
 
 [project.urls]
 Homepage = "https://github.com/JacobCoffee/pv"
@@ -53,7 +53,7 @@ build-backend = "uv_build"
 [tool.ruff]
 fix = true
 line-length = 120
-src = ["src/pv_tool"]
+src = ["src/plan_view"]
 target-version = "py314"
 
 [tool.ruff.format]
@@ -82,7 +82,7 @@ ignore = [
 ]
 
 [tool.ruff.lint.isort]
-known-first-party = ["pv_tool"]
+known-first-party = ["plan_view"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
@@ -175,14 +175,14 @@ addopts = [
     "-v",
     "--strict-markers",
     "--tb=short",
-    "--cov=src/pv_tool",
+    "--cov=src/plan_view",
     "--cov-report=term-missing:skip-covered",
     "--cov-fail-under=100",
 ]
 filterwarnings = ["error", "ignore::DeprecationWarning"]
 
 [tool.coverage.run]
-source = ["src/pv_tool"]
+source = ["src/plan_view"]
 branch = true
 omit = ["*/tests/*"]
 

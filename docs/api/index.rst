@@ -1,29 +1,29 @@
 API Reference
 =============
 
-This section contains the complete API documentation for pv-tool, generated from
+This section contains the complete API documentation for plan-view, generated from
 source code docstrings.
 
 Module Overview
 ---------------
 
-pv_tool
-^^^^^^^
+plan_view
+^^^^^^^^^
 
-The main package for pv-tool.
+The main package for plan-view.
 
-.. automodule:: pv_tool
+.. automodule:: plan_view
    :members:
    :undoc-members:
    :show-inheritance:
 
 
-pv_tool.cli
-^^^^^^^^^^^
+plan_view.cli
+^^^^^^^^^^^^^
 
 Command-line interface module.
 
-.. automodule:: pv_tool.cli
+.. automodule:: plan_view.cli
    :members:
    :undoc-members:
    :show-inheritance:

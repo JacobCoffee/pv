@@ -9,7 +9,7 @@ from unittest.mock import patch
 
 import pytest
 
-from pv_tool import cli
+from plan_view import cli
 
 # ============ FORMATTING FUNCTIONS ============
 
