@@ -12,6 +12,11 @@
       "properties": {
         "project": {"type": "string"},
         "version": {"type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$"},
+        "schema_version": {
+          "description": "Schema version for migration support (e.g., '1.0.0')",
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$"
+        },
         "created_at": {"type": "string", "format": "date-time"},
         "updated_at": {"type": "string", "format": "date-time"},
         "business_plan_path": {"type": "string"}
