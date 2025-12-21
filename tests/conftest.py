@@ -5,6 +5,8 @@ from argparse import Namespace
 
 import pytest
 
+from tests.builders import PhaseBuilder, PlanBuilder, TaskBuilder
+
 
 @pytest.fixture
 def tmp_plan_path(tmp_path):
@@ -209,3 +211,187 @@ def empty_plan_file(tmp_plan_path, empty_plan):
 def base_args(tmp_plan_path):
     """Return base argparse Namespace for edit commands."""
     return Namespace(file=tmp_plan_path, json=False, command=None, help=False)
+
+
+# ============ BUILDER PATTERN FIXTURES ============
+
+
+@pytest.fixture
+def plan_builder():
+    """Return a PlanBuilder instance for fluent test data creation.
+
+    Example:
+        def test_something(plan_builder):
+            plan = (plan_builder
+                    .with_project("My Project")
+                    .add_phase(PhaseBuilder().with_id("0").build())
+                    .build())
+    """
+    return PlanBuilder()
+
+
+@pytest.fixture
+def task_builder():
+    """Return a TaskBuilder instance for fluent task creation.
+
+    Example:
+        def test_something(task_builder):
+            task = (task_builder
+                    .with_id("1.1.1")
+                    .with_title("Test Task")
+                    .with_status("completed")
+                    .build())
+    """
+    return TaskBuilder()
+
+
+@pytest.fixture
+def phase_builder():
+    """Return a PhaseBuilder instance for fluent phase creation.
+
+    Example:
+        def test_something(phase_builder, task_builder):
+            phase = (phase_builder
+                     .with_id("1")
+                     .add_task(task_builder.with_id("1.1.1").build())
+                     .build())
+    """
+    return PhaseBuilder()
+
+
+# ============ MIGRATED FIXTURES USING BUILDERS ============
+
+
+@pytest.fixture
+def empty_plan_v2(plan_builder):
+    """Return an empty plan using the builder pattern.
+
+    This is the builder-based version of empty_plan.
+    Use this in new tests for better maintainability.
+    """
+    return plan_builder.build()
+
+
+@pytest.fixture
+def sample_plan_v2():
+    """Return a sample plan with multiple phases using builders.
+
+    This is the builder-based version of sample_plan.
+    Use this in new tests for better maintainability.
+    """
+    # Create tasks for phase 0 (Setup)
+    task_0_1_1 = (
+        TaskBuilder()
+        .with_id("0.1.1")
+        .with_title("Task One")
+        .with_status("completed")
+        .with_agent("python-backend-engineer")
+        .completed_at("2025-01-02T00:00:00Z")
+        .build()
+    )
+
+    task_0_1_2 = (
+        TaskBuilder()
+        .with_id("0.1.2")
+        .with_title("Task Two")
+        .with_status("in_progress")
+        .with_agent("ui-engineer")
+        .depends_on(["0.1.1"])
+        .started_at("2025-01-03T00:00:00Z")
+        .build()
+    )
+
+    # Create phase 0
+    phase_0 = (
+        PhaseBuilder()
+        .with_id("0")
+        .with_name("Setup")
+        .with_description("Initial setup phase")
+        .add_task(task_0_1_1)
+        .add_task(task_0_1_2)
+        .build()
+    )
+
+    # Create tasks for phase 1 (Development)
+    task_1_1_1 = (
+        TaskBuilder().with_id("1.1.1").with_title("Feature X").with_status("pending").depends_on(["0.1.2"]).build()
+    )
+
+    task_1_1_2 = (
+        TaskBuilder()
+        .with_id("1.1.2")
+        .with_title("Feature Y")
+        .with_status("pending")
+        .with_agent("Python Testing Expert")
+        .build()
+    )
+
+    # Create phase 1
+    phase_1 = (
+        PhaseBuilder()
+        .with_id("1")
+        .with_name("Development")
+        .with_description("Main development phase")
+        .with_status("pending")
+        .add_task(task_1_1_1)
+        .add_task(task_1_1_2)
+        .build()
+    )
+
+    # Create the plan
+    return (
+        PlanBuilder()
+        .with_project("Test Project")
+        .with_version("1.0.0")
+        .with_created_at("2025-01-01T00:00:00Z")
+        .with_updated_at("2025-01-01T00:00:00Z")
+        .add_phase(phase_0)
+        .add_phase(phase_1)
+        .build()
+    )
+
+
+@pytest.fixture
+def completed_plan_v2():
+    """Return a fully completed plan using builders.
+
+    This is the builder-based version of completed_plan.
+    Use this in new tests for better maintainability.
+    """
+    task_1 = (
+        TaskBuilder()
+        .with_id("0.1.1")
+        .with_title("Done Task 1")
+        .with_status("completed")
+        .completed_at("2025-01-02T00:00:00Z")
+        .build()
+    )
+
+    task_2 = (
+        TaskBuilder()
+        .with_id("0.1.2")
+        .with_title("Done Task 2")
+        .with_status("completed")
+        .completed_at("2025-01-03T00:00:00Z")
+        .build()
+    )
+
+    phase = (
+        PhaseBuilder()
+        .with_id("0")
+        .with_name("Done Phase")
+        .with_description("All done")
+        .add_task(task_1)
+        .add_task(task_2)
+        .build()
+    )
+
+    return (
+        PlanBuilder()
+        .with_project("Completed Project")
+        .with_version("1.0.0")
+        .with_created_at("2025-01-01T00:00:00Z")
+        .with_updated_at("2025-01-01T00:00:00Z")
+        .add_phase(phase)
+        .build()
+    )
