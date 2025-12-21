@@ -2,7 +2,6 @@
 
 import json
 from argparse import Namespace
-from pathlib import Path
 
 import pytest
 
@@ -33,12 +32,12 @@ def test_require_plan_loads_and_injects_plan(tmp_path):
 
     # Define a command function that expects plan as first arg
     @require_plan
-    def test_cmd(plan: dict, args: Namespace) -> str:
+    def test_cmd(plan: dict, args: Namespace) -> str:  # noqa: ARG001
         return f"Project: {plan['meta']['project']}"
 
     # Call with args only
-    args = Namespace(file=plan_path)
-    result = test_cmd(args)
+    ns = Namespace(file=plan_path)
+    result = test_cmd(ns)
 
     assert result == "Project: Test"
 
@@ -98,22 +97,21 @@ def test_require_plan_passes_extra_args(tmp_path):
     plan_path.write_text(json.dumps(plan_data, indent=2))
 
     @require_plan
-    def test_cmd(plan: dict, args: Namespace, extra_arg: str) -> str:
+    def test_cmd(plan: dict, args: Namespace, extra_arg: str) -> str:  # noqa: ARG001
         return f"Project: {plan['meta']['project']}, Extra: {extra_arg}"
 
-    args = Namespace(file=plan_path)
-    result = test_cmd(args, "test_value")
+    ns = Namespace(file=plan_path)
+    result = test_cmd(ns, "test_value")
 
     assert result == "Project: Test, Extra: test_value"
 
 
-def test_require_plan_preserves_function_metadata(tmp_path):
+def test_require_plan_preserves_function_metadata():
     """Test that @require_plan preserves original function name and docstring."""
 
     @require_plan
     def sample_command(plan: dict, args: Namespace) -> None:
         """This is a sample command."""
-        pass
 
     assert sample_command.__name__ == "sample_command"
     assert sample_command.__doc__ == "This is a sample command."
@@ -186,12 +184,12 @@ def test_require_plan_extracts_file_from_namespace(tmp_path):
         path.write_text(json.dumps(plan_data, indent=2))
 
     @require_plan
-    def get_project_name(plan: dict, args: Namespace) -> str:
+    def get_project_name(plan: dict, args: Namespace) -> str:  # noqa: ARG001
         return plan["meta"]["project"]
 
     # Test with different file paths
-    args1 = Namespace(file=plan_path_1)
-    args2 = Namespace(file=plan_path_2)
+    ns1 = Namespace(file=plan_path_1)
+    ns2 = Namespace(file=plan_path_2)
 
-    assert get_project_name(args1) == "Project1"
-    assert get_project_name(args2) == "Project2"
+    assert get_project_name(ns1) == "Project1"
+    assert get_project_name(ns2) == "Project2"

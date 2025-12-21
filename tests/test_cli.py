@@ -11,6 +11,7 @@ from unittest.mock import patch
 import pytest
 
 from plan_view import cli
+from plan_view.state import format_phase_suggestions, format_task_suggestions
 
 # ============ FORMATTING FUNCTIONS ============
 
@@ -344,16 +345,12 @@ class TestErrorSuggestions:
 
     def test_format_task_suggestions_truncates_long_titles(self):
         """Test long titles are truncated."""
-        from plan_view.state import format_task_suggestions
-
         plan = {"phases": [{"id": "0", "name": "Test", "tasks": [{"id": "0.1.1", "title": "A" * 50}]}]}
         result = format_task_suggestions(plan)
         assert "..." in result
 
     def test_format_task_suggestions_shows_more_hint(self):
         """Test 'more' hint when many tasks."""
-        from plan_view.state import format_task_suggestions
-
         plan = {
             "phases": [
                 {"id": "0", "name": "Test", "tasks": [{"id": f"0.1.{i}", "title": f"Task {i}"} for i in range(10)]}
@@ -364,8 +361,6 @@ class TestErrorSuggestions:
 
     def test_format_phase_suggestions(self, sample_plan):
         """Test phase suggestions formatting."""
-        from plan_view.state import format_phase_suggestions
-
         result = format_phase_suggestions(sample_plan)
         assert "Available phases:" in result
         assert "Setup" in result
@@ -373,8 +368,6 @@ class TestErrorSuggestions:
 
     def test_format_phase_suggestions_empty(self):
         """Test phase suggestions with no phases."""
-        from plan_view.state import format_phase_suggestions
-
         empty = {"phases": []}
         result = format_phase_suggestions(empty)
         assert "No phases found" in result
