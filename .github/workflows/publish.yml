@@ -76,19 +76,33 @@ jobs:
     permissions:
       contents: write
     steps:
+      - name: Checkout
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          fetch-depth: 0
+
       - name: Download signed dist
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           name: dist-signed
           path: dist/
 
+      - name: Generate release notes with git-cliff
+        uses: orhun/git-cliff-action@e16f179f0be49ecdfe63753837f20b9531642772 # v4.7.0
+        id: cliff
+        with:
+          config: pyproject.toml
+          args: --unreleased --strip header
+        env:
+          GITHUB_REPO: ${{ github.repository }}
+
       - name: Create draft release and upload assets
         run: |
           gh release create "${TAG_NAME}" dist/** \
             --repo "${GITHUB_REPOSITORY}" \
             --draft \
-            --generate-notes \
-            --title "${TAG_NAME}"
+            --title "${TAG_NAME}" \
+            --notes "${{ steps.cliff.outputs.content }}"
         env:
           GH_TOKEN: ${{ github.token }}
           TAG_NAME: ${{ github.ref_name }}

@@ -26,8 +26,8 @@ jobs:
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           fetch-depth: 0
-          token: ${{ secrets.CHANGELOG_PAT }}
-          persist-credentials: false
+          token: ${{ secrets.CHANGELOG_PAT || github.token }}
+          persist-credentials: true
 
       - name: Generate changelog
         uses: orhun/git-cliff-action@e16f179f0be49ecdfe63753837f20b9531642772 # v4.7.0
@@ -41,7 +41,7 @@ jobs:
       - name: Commit and push changelog
         env:
           TAG: ${{ inputs.tag || github.ref_name }}
-          GH_TOKEN: ${{ secrets.CHANGELOG_PAT }}
+          GH_TOKEN: ${{ secrets.CHANGELOG_PAT || github.token }}
         run: |
           if git diff --quiet CHANGELOG.md; then
             echo "No changes to commit"
