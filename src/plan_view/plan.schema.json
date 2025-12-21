@@ -134,6 +134,10 @@
       "type": ["string", "null"],
       "enum": [null, "low", "medium", "high"]
     },
+    "estimated_minutes": {
+      "type": ["integer", "null"],
+      "minimum": 0
+    },
     "task": {
       "type": "object",
       "required": ["id", "title", "status", "agent_type", "depends_on", "tracking"],
@@ -142,6 +146,7 @@
         "title": {"type": "string"},
         "status": {"$ref": "#/definitions/status"},
         "priority": {"$ref": "#/definitions/priority"},
+        "estimated_minutes": {"$ref": "#/definitions/estimated_minutes"},
         "agent_type": {"$ref": "#/definitions/agent_type"},
         "business_plan_ref": {"$ref": "#/definitions/business_plan_ref"},
         "depends_on": {
