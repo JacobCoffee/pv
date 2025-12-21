@@ -75,24 +75,10 @@
       "enum": ["pending", "in_progress", "completed", "blocked", "skipped"]
     },
     "agent_type": {
-      "type": ["string", "null"],
-      "enum": [
-        null,
-        "general-purpose",
-        "Explore",
-        "Plan",
-        "software-architect",
-        "software-architect-advanced",
-        "software-debugger",
-        "python-backend-architect",
-        "python-backend-engineer",
-        "Python Testing Expert",
-        "ui-engineer",
-        "ui-comprehensive-tester",
-        "github-git-expert",
-        "documentation-expert",
-        "travel-expert-advanced",
-        "claude-code-guide"
+      "description": "Agent type identifier. Use kebab-case (e.g., 'python-backend-engineer') or any descriptive name.",
+      "oneOf": [
+        {"type": "null"},
+        {"type": "string", "minLength": 1}
       ]
     },
     "business_plan_ref": {
