@@ -6,7 +6,12 @@ import sys
 
 from plan_view.formatting import VALID_STATUSES, now_iso
 from plan_view.io import load_plan, save_plan
-from plan_view.state import find_phase, find_task
+from plan_view.state import (
+    find_phase,
+    find_task,
+    format_phase_suggestions,
+    format_task_suggestions,
+)
 
 
 def cmd_init(args: argparse.Namespace) -> None:
@@ -75,7 +80,8 @@ def cmd_add_task(args: argparse.Namespace) -> None:
 
     phase = find_phase(plan, args.phase)
     if phase is None:
-        print(f"Error: Phase '{args.phase}' not found", file=sys.stderr)
+        print(f"Error: Phase '{args.phase}' not found\n", file=sys.stderr)
+        print(format_phase_suggestions(plan), file=sys.stderr)
         sys.exit(1)
     assert phase is not None
 
@@ -123,7 +129,8 @@ def cmd_set(args: argparse.Namespace) -> None:
 
     result = find_task(plan, args.id)
     if result is None:
-        print(f"Error: Task '{args.id}' not found", file=sys.stderr)
+        print(f"Error: Task '{args.id}' not found\n", file=sys.stderr)
+        print(format_task_suggestions(plan), file=sys.stderr)
         sys.exit(1)
     assert result is not None
 
@@ -189,7 +196,8 @@ def cmd_defer(args: argparse.Namespace) -> None:
 
     result = find_task(plan, args.id)
     if result is None:
-        print(f"Error: Task '{args.id}' not found", file=sys.stderr)
+        print(f"Error: Task '{args.id}' not found\n", file=sys.stderr)
+        print(format_task_suggestions(plan), file=sys.stderr)
         sys.exit(1)
     assert result is not None
 
@@ -245,7 +253,8 @@ def cmd_rm(args: argparse.Namespace) -> None:
     if args.type == "task":
         result = find_task(plan, args.id)
         if result is None:
-            print(f"Error: Task '{args.id}' not found", file=sys.stderr)
+            print(f"Error: Task '{args.id}' not found\n", file=sys.stderr)
+            print(format_task_suggestions(plan), file=sys.stderr)
             sys.exit(1)
         assert result is not None
         phase, task = result
@@ -257,7 +266,8 @@ def cmd_rm(args: argparse.Namespace) -> None:
     else:  # args.type == "phase" (argparse enforces this)
         phase = find_phase(plan, args.id)
         if phase is None:
-            print(f"Error: Phase '{args.id}' not found", file=sys.stderr)
+            print(f"Error: Phase '{args.id}' not found\n", file=sys.stderr)
+            print(format_phase_suggestions(plan), file=sys.stderr)
             sys.exit(1)
         assert phase is not None
         plan["phases"].remove(phase)

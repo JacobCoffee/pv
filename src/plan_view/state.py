@@ -96,3 +96,46 @@ def task_to_dict(phase: dict, task: dict) -> dict:
         "depends_on": task.get("depends_on", []),
         "tracking": task.get("tracking", {}),
     }
+
+
+def get_all_task_ids(plan: dict, limit: int = 5) -> list[tuple[str, str, str]]:
+    """Get task IDs with titles and phase names (limited for display)."""
+    tasks = []
+    for phase in plan.get("phases", []):
+        for task in phase.get("tasks", []):
+            tasks.append((task["id"], task["title"], phase["name"]))
+            if len(tasks) >= limit:
+                return tasks
+    return tasks
+
+
+def get_all_phase_ids(plan: dict) -> list[tuple[str, str]]:
+    """Get phase IDs with names."""
+    return [(p["id"], p["name"]) for p in plan.get("phases", [])]
+
+
+def format_task_suggestions(plan: dict, limit: int = 5) -> str:
+    """Format task suggestions for error messages."""
+    tasks = get_all_task_ids(plan, limit)
+    if not tasks:
+        return "No tasks found. Use 'pv add-task' to create one."
+    lines = ["Available tasks:"]
+    for task_id, title, _phase_name in tasks:
+        # Truncate long titles
+        display_title = title[:30] + "..." if len(title) > 30 else title
+        lines.append(f"  {task_id}  {display_title}")
+    total = sum(len(p.get("tasks", [])) for p in plan.get("phases", []))
+    if total > limit:
+        lines.append(f"  ... and {total - limit} more (use 'pv' to see all)")
+    return "\n".join(lines)
+
+
+def format_phase_suggestions(plan: dict) -> str:
+    """Format phase suggestions for error messages."""
+    phases = get_all_phase_ids(plan)
+    if not phases:
+        return "No phases found. Use 'pv add-phase' to create one."
+    lines = ["Available phases:"]
+    for phase_id, name in phases:
+        lines.append(f"  {phase_id}  {name}")
+    return "\n".join(lines)

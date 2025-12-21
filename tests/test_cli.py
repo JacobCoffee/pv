@@ -224,6 +224,82 @@ class TestUtilities:
         assert cli.get_status_icon("unknown") == "\u2753"
 
 
+class TestErrorSuggestions:
+    """Tests for improved error messages with suggestions."""
+
+    def test_format_task_suggestions(self, sample_plan):
+        """Test task suggestions formatting."""
+        from plan_view.state import format_task_suggestions
+
+        result = format_task_suggestions(sample_plan)
+        assert "Available tasks:" in result
+        assert "0.1.1" in result
+        assert "Task One" in result
+
+    def test_format_task_suggestions_empty(self):
+        """Test task suggestions with no tasks."""
+        from plan_view.state import format_task_suggestions
+
+        empty = {"phases": []}
+        result = format_task_suggestions(empty)
+        assert "No tasks found" in result
+
+    def test_format_task_suggestions_truncates_long_titles(self):
+        """Test long titles are truncated."""
+        from plan_view.state import format_task_suggestions
+
+        plan = {"phases": [{"id": "0", "name": "Test", "tasks": [{"id": "0.1.1", "title": "A" * 50}]}]}
+        result = format_task_suggestions(plan)
+        assert "..." in result
+
+    def test_format_task_suggestions_shows_more_hint(self):
+        """Test 'more' hint when many tasks."""
+        from plan_view.state import format_task_suggestions
+
+        plan = {
+            "phases": [
+                {"id": "0", "name": "Test", "tasks": [{"id": f"0.1.{i}", "title": f"Task {i}"} for i in range(10)]}
+            ]
+        }
+        result = format_task_suggestions(plan, limit=3)
+        assert "... and 7 more" in result
+
+    def test_format_phase_suggestions(self, sample_plan):
+        """Test phase suggestions formatting."""
+        from plan_view.state import format_phase_suggestions
+
+        result = format_phase_suggestions(sample_plan)
+        assert "Available phases:" in result
+        assert "Setup" in result
+        assert "Development" in result
+
+    def test_format_phase_suggestions_empty(self):
+        """Test phase suggestions with no phases."""
+        from plan_view.state import format_phase_suggestions
+
+        empty = {"phases": []}
+        result = format_phase_suggestions(empty)
+        assert "No phases found" in result
+
+    def test_error_shows_task_suggestions(self, sample_plan_file, capsys):
+        """Test task not found error shows suggestions."""
+        args = Namespace(file=sample_plan_file, id="99.99.99", field="status", value="done")
+        with pytest.raises(SystemExit):
+            cli.cmd_set(args)
+        captured = capsys.readouterr()
+        assert "not found" in captured.err
+        assert "Available tasks:" in captured.err
+
+    def test_error_shows_phase_suggestions(self, sample_plan_file, capsys):
+        """Test phase not found error shows suggestions."""
+        args = Namespace(file=sample_plan_file, phase="99", title="Test", agent=None, deps=None, quiet=False)
+        with pytest.raises(SystemExit):
+            cli.cmd_add_task(args)
+        captured = capsys.readouterr()
+        assert "not found" in captured.err
+        assert "Available phases:" in captured.err
+
+
 # ============ FILE I/O ============
 
 
@@ -989,8 +1065,14 @@ class TestEditCommands:
                     "status": "pending",
                     "progress": {"completed": 0, "total": 1, "percentage": 0},
                     "tasks": [
-                        {"id": "0.1.1", "title": "Task", "status": "pending",
-                         "agent_type": None, "depends_on": [], "tracking": {}},
+                        {
+                            "id": "0.1.1",
+                            "title": "Task",
+                            "status": "pending",
+                            "agent_type": None,
+                            "depends_on": [],
+                            "tracking": {},
+                        },
                     ],
                 },
                 {
@@ -1000,10 +1082,22 @@ class TestEditCommands:
                     "status": "pending",
                     "progress": {"completed": 0, "total": 2, "percentage": 0},
                     "tasks": [
-                        {"id": "short", "title": "Short ID", "status": "pending",
-                         "agent_type": None, "depends_on": [], "tracking": {}},
-                        {"id": "deferred.x.y", "title": "Non-numeric", "status": "pending",
-                         "agent_type": None, "depends_on": [], "tracking": {}},
+                        {
+                            "id": "short",
+                            "title": "Short ID",
+                            "status": "pending",
+                            "agent_type": None,
+                            "depends_on": [],
+                            "tracking": {},
+                        },
+                        {
+                            "id": "deferred.x.y",
+                            "title": "Non-numeric",
+                            "status": "pending",
+                            "agent_type": None,
+                            "depends_on": [],
+                            "tracking": {},
+                        },
                     ],
                 },
             ],
