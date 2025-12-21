@@ -2,7 +2,9 @@
 
 import argparse
 import contextlib
+import shutil
 import sys
+from pathlib import Path
 
 from plan_view.decorators import require_plan
 from plan_view.formatting import VALID_STATUSES, now_iso
@@ -356,3 +358,67 @@ def cmd_rm(plan: dict, args: argparse.Namespace) -> None:
             save_plan(args.file, plan)
         if not getattr(args, "quiet", False):
             print(f"{_prefix(args)} Removed phase {args.id}")
+
+
+def _rotate_backups(backup_dir: Path, plan_name: str, max_backups: int = 5) -> None:
+    """Rotate backup files: .json.1 → .json.2, etc. Deletes oldest if at max."""
+    for i in range(max_backups, 0, -1):
+        old = backup_dir / f"{plan_name}.json.{i}"
+        new = backup_dir / f"{plan_name}.json.{i + 1}"
+        if old.exists():
+            if i == max_backups:
+                old.unlink()  # Delete oldest
+            else:
+                old.rename(new)
+
+
+def _compact_task(task: dict) -> bool:
+    """Strip completed task to minimal fields. Returns True if modified."""
+    keep = {"id", "title", "status", "tracking"}
+    removed = [k for k in list(task.keys()) if k not in keep]
+    for key in removed:
+        del task[key]
+
+    # Keep only completed_at in tracking
+    modified = bool(removed)
+    if task.get("tracking"):
+        completed_at = task["tracking"].get("completed_at")
+        old_tracking = task["tracking"]
+        task["tracking"] = {"completed_at": completed_at} if completed_at else {}
+        if task["tracking"] != old_tracking:
+            modified = True
+
+    return modified
+
+
+@require_plan
+def cmd_compact(plan: dict, args: argparse.Namespace) -> None:
+    """Backup plan and compact completed tasks to minimal fields."""
+    plan_path = Path(args.file)
+    max_backups = getattr(args, "max_backups", 5)
+
+    # 1. Create backup directory and rotate existing backups
+    backup_dir = Path(".claude/plan-view")
+    backup_dir.mkdir(parents=True, exist_ok=True)
+
+    plan_name = plan_path.stem  # "plan" from "plan.json"
+    _rotate_backups(backup_dir, plan_name, max_backups)
+
+    # 2. Save current plan as .json.1
+    backup_path = backup_dir / f"{plan_name}.json.1"
+    shutil.copy2(plan_path, backup_path)
+
+    # 3. Compact completed tasks
+    compacted = 0
+    for phase in plan["phases"]:
+        for task in phase["tasks"]:
+            if task["status"] == "completed" and _compact_task(task):
+                compacted += 1
+
+    # 4. Save compacted plan
+    if not _is_dry_run(args):
+        save_plan(args.file, plan)
+
+    if not getattr(args, "quiet", False):
+        print(f"{_prefix(args)} Backed up to {backup_path}")
+        print(f"{_prefix(args)} Compacted {compacted} completed task{'s' if compacted != 1 else ''}")

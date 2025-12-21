@@ -9,6 +9,7 @@ from plan_view.commands.edit import (
     cmd_add_task,
     cmd_block,
     cmd_bug,
+    cmd_compact,
     cmd_defer,
     cmd_done,
     cmd_init,
@@ -111,6 +112,7 @@ __all__ = [
     "cmd_defer",
     "cmd_bug",
     "cmd_rm",
+    "cmd_compact",
     # Entry point
     "main",
 ]
@@ -240,6 +242,12 @@ def main() -> None:
     rm_p.add_argument("-q", "--quiet", action="store_true")
     rm_p.add_argument("-d", "--dry-run", action="store_true")
 
+    # Compact
+    compact_p = subparsers.add_parser("compact", add_help=False)
+    compact_p.add_argument("-n", "--max-backups", type=int, default=5)
+    compact_p.add_argument("-q", "--quiet", action="store_true")
+    compact_p.add_argument("-d", "--dry-run", action="store_true")
+
     args = parser.parse_args()
 
     # Help command
@@ -281,6 +289,9 @@ def main() -> None:
             return
         case "rm":
             cmd_rm(args)
+            return
+        case "compact":
+            cmd_compact(args)
             return
 
     # View commands need to load plan
