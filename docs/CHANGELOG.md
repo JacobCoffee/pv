@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [unreleased]
+
+
+### Documentation
+
+
+- regenerate changelog for v1.1.2 - ([6725900](https://github.com/JacobCoffee/pv/commit/6725900737b12d03d1382a536df223bf16a0ab79)) - github-actions[bot]
 ## [1.1.2](https://github.com/JacobCoffee/pv/compare/v1.1.1..v1.1.2) - 2025-12-21
 
 
