@@ -7,8 +7,8 @@ and validates they produce correct data structures.
 import pytest
 
 from tests.builders import (
-    PlanBuilder,
     PhaseBuilder,
+    PlanBuilder,
     TaskBuilder,
     build_completed_task,
     build_empty_plan,
@@ -94,11 +94,7 @@ class TestTaskBuilder:
 
     def test_task_with_tracking_kwargs(self):
         """Test setting tracking data via kwargs."""
-        task = (
-            TaskBuilder()
-            .with_tracking(time_spent_minutes=45, notes="Test note", attempts=2)
-            .build()
-        )
+        task = TaskBuilder().with_tracking(time_spent_minutes=45, notes="Test note", attempts=2).build()
 
         assert task["tracking"]["time_spent_minutes"] == 45
         assert task["tracking"]["notes"] == "Test note"
@@ -217,13 +213,7 @@ class TestPhaseBuilder:
 
     def test_phase_custom_values(self):
         """Test phase with custom metadata."""
-        phase = (
-            PhaseBuilder()
-            .with_id("5")
-            .with_name("Custom Phase")
-            .with_description("Custom description")
-            .build()
-        )
+        phase = PhaseBuilder().with_id("5").with_name("Custom Phase").with_description("Custom description").build()
 
         assert phase["id"] == "5"
         assert phase["name"] == "Custom Phase"

@@ -760,6 +760,45 @@ class TestViewCommands:
         captured = capsys.readouterr()
         assert "Started:" in captured.out
 
+    def test_cmd_get_phase_by_id_text(self, sample_plan, capsys):
+        """Test get command with phase ID text output."""
+        cli.cmd_get(sample_plan, "0", as_json=False)
+        captured = capsys.readouterr()
+        assert "Phase 0: Setup" in captured.out
+        assert "Initial setup phase" in captured.out
+        assert "0.1.1" in captured.out
+        assert "0.1.2" in captured.out
+
+    def test_cmd_get_phase_by_id_json(self, sample_plan, capsys):
+        """Test get command with phase ID JSON output."""
+        cli.cmd_get(sample_plan, "1", as_json=True)
+        captured = capsys.readouterr()
+        result = json.loads(captured.out)
+        assert result["id"] == "1"
+        assert result["name"] == "Development"
+        assert len(result["tasks"]) == 2
+
+    def test_cmd_get_phase_not_found(self, sample_plan, capsys):
+        """Test get command for non-existent phase."""
+        cli.cmd_get(sample_plan, "99", as_json=False)
+        captured = capsys.readouterr()
+        assert "not found" in captured.out
+
+    def test_cmd_get_phase_not_found_json(self, sample_plan, capsys):
+        """Test get command JSON for non-existent phase."""
+        cli.cmd_get(sample_plan, "99", as_json=True)
+        captured = capsys.readouterr()
+        assert captured.out.strip() == "null"
+
+    def test_cmd_get_task_priority_over_phase(self, sample_plan, capsys):
+        """Test get command prioritizes task ID over phase ID when both exist."""
+        # Task 0.1.1 should take priority over phase 0 if we search for something ambiguous
+        cli.cmd_get(sample_plan, "0.1.1", as_json=False)
+        captured = capsys.readouterr()
+        # Should show task, not phase
+        assert "Task One" in captured.out
+        assert "Status:" in captured.out  # Task-specific field
+
     def test_cmd_last_text(self, sample_plan, capsys):
         """Test last command text output."""
         cli.cmd_last(sample_plan, count=5, as_json=False)
@@ -1368,6 +1407,22 @@ class TestCLIMain:
         captured = capsys.readouterr()
         assert "Task One" in captured.out
 
+    def test_main_get_phase(self, sample_plan_file, capsys, monkeypatch):
+        """Test get command with phase ID via CLI."""
+        monkeypatch.setattr(sys, "argv", ["pv", "-f", str(sample_plan_file), "get", "0"])
+        cli.main()
+        captured = capsys.readouterr()
+        assert "Phase 0: Setup" in captured.out
+
+    def test_main_get_phase_json(self, sample_plan_file, capsys, monkeypatch):
+        """Test get command with phase ID and --json via CLI."""
+        monkeypatch.setattr(sys, "argv", ["pv", "-f", str(sample_plan_file), "get", "1", "--json"])
+        cli.main()
+        captured = capsys.readouterr()
+        result = json.loads(captured.out)
+        assert result["id"] == "1"
+        assert result["name"] == "Development"
+
     def test_main_last(self, sample_plan_file, capsys, monkeypatch):
         """Test last command via CLI."""
         monkeypatch.setattr(sys, "argv", ["pv", "-f", str(sample_plan_file), "last"])
@@ -1404,19 +1459,46 @@ class TestCLIMain:
         assert "Recently Completed" in captured.out
 
     def test_main_summary(self, sample_plan_file, capsys, monkeypatch):
-        """Test summary command via CLI."""
+        """Test summary command via CLI with pretty output (default)."""
         monkeypatch.setattr(sys, "argv", ["pv", "-f", str(sample_plan_file), "summary"])
         cli.main()
         captured = capsys.readouterr()
-        assert "total_tasks" in captured.out
-        assert "overall_progress" in captured.out
+        # Check for pretty output, not JSON
+        assert "Test Project v1.0.0" in captured.out
+        assert "Overall Progress:" in captured.out
+        assert "Phase Breakdown:" in captured.out
+        # Should NOT contain JSON fields as raw output
+        assert '"total_tasks"' not in captured.out
+
+    def test_main_summary_json(self, sample_plan_file, capsys, monkeypatch):
+        """Test summary command with --json flag."""
+        monkeypatch.setattr(sys, "argv", ["pv", "-f", str(sample_plan_file), "summary", "--json"])
+        cli.main()
+        captured = capsys.readouterr()
+        result = json.loads(captured.out)
+        assert result["project"] == "Test Project"
+        assert result["version"] == "1.0.0"
+        assert result["total_tasks"] == 4
+        assert result["completed_tasks"] == 1
+        assert result["overall_progress"] == 25.0
 
     def test_main_s_alias(self, sample_plan_file, capsys, monkeypatch):
         """Test s alias for summary."""
         monkeypatch.setattr(sys, "argv", ["pv", "-f", str(sample_plan_file), "s"])
         cli.main()
         captured = capsys.readouterr()
-        assert "total_tasks" in captured.out
+        # Check for pretty output
+        assert "Test Project v1.0.0" in captured.out
+        assert "Overall Progress:" in captured.out
+
+    def test_main_s_alias_json(self, sample_plan_file, capsys, monkeypatch):
+        """Test s alias for summary with --json flag."""
+        monkeypatch.setattr(sys, "argv", ["pv", "-f", str(sample_plan_file), "s", "--json"])
+        cli.main()
+        captured = capsys.readouterr()
+        result = json.loads(captured.out)
+        assert result["project"] == "Test Project"
+        assert result["total_tasks"] == 4
 
     def test_main_validate(self, sample_plan_file, capsys, monkeypatch):
         """Test validate command via CLI."""

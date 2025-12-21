@@ -8,7 +8,7 @@ import jsonschema
 
 from plan_view.formatting import ICONS, bold, bold_cyan, bold_yellow, dim, green
 from plan_view.io import load_schema
-from plan_view.state import find_task, get_current_phase, get_next_task, task_to_dict
+from plan_view.state import find_phase, find_task, get_current_phase, get_next_task, task_to_dict
 
 HELP_TEXT = """\
 View and edit plan.json for task tracking
@@ -18,9 +18,9 @@ View Commands:
   current, c          Show current progress and next task
   next, n             Show next task to work on
   phase, p            Show current phase details
-  get, g ID           Show a specific task by ID
+  get, g ID           Show a specific task or phase by ID
   last, l [-a]        Show recently completed tasks (-a for all)
-  summary, s          Show plan summary (always JSON)
+  summary, s          Show plan summary (pretty output, use --json for JSON)
   validate, v         Validate plan.json structure
 
 Edit Commands:
@@ -215,39 +215,74 @@ def cmd_phase(plan: dict, *, as_json: bool = False) -> None:
 
 
 def cmd_get(plan: dict, task_id: str, *, as_json: bool = False) -> None:
-    """Display a specific task by ID."""
+    """Display a specific task or phase by ID."""
+    # Try to find as a task first
     result = find_task(plan, task_id)
-    if not result:
+    if result:
+        phase, task = result
+
         if as_json:
-            print("null")
-        else:
-            print(f"Task '{task_id}' not found!")
+            print(json.dumps(task_to_dict(phase, task), indent=2))
+            return
+
+        icon = ICONS.get(task["status"], "❓")
+        agent = task.get("agent_type") or "general-purpose"
+        tracking = task.get("tracking", {})
+
+        print(f"\n{bold(f'[{task_id}] {task["title"]}')}")
+        print(f"  {dim('Status:')} {icon} {task['status']}")
+        print(f"  {dim('Phase:')} {phase['name']}")
+        print(f"  {dim('Agent:')} {agent}")
+
+        deps = task.get("depends_on", [])
+        if deps:
+            print(f"  {dim('Depends on:')} {', '.join(deps)}")
+
+        if tracking.get("started_at"):
+            print(f"  {dim('Started:')} {tracking['started_at'][:10]}")
+        if tracking.get("completed_at"):
+            print(f"  {dim('Completed:')} {tracking['completed_at'][:10]}")
+        print()
         return
 
-    phase, task = result
+    # If not a task, try to find as a phase
+    phase = find_phase(plan, task_id)
+    if phase:
+        if as_json:
+            print(json.dumps(phase, indent=2))
+            return
 
+        progress = phase.get("progress", {})
+        pct = progress.get("percentage", 0)
+        phase_id = phase["id"]
+        phase_name = phase["name"]
+        phase_desc = phase["description"]
+        completed = progress.get("completed", 0)
+        total = progress.get("total", 0)
+
+        print(f"\n{bold_cyan(f'Phase {phase_id}: {phase_name}')}")
+        print(f"   {phase_desc}")
+        print(f"   Progress: {pct:.0f}% ({completed}/{total} tasks)\n")
+
+        for task in phase.get("tasks", []):
+            icon = ICONS.get(task["status"], "❓")
+            task_id_display = task["id"]
+            task_title = task["title"]
+            agent = task.get("agent_type") or "general"
+            agent_str = f"({agent})" if task.get("agent_type") else ""
+            deps = task.get("depends_on", [])
+            dep_str = f" [deps: {', '.join(deps)}]" if deps else ""
+
+            print(f"   {icon} [{task_id_display}] {task_title} {dim(agent_str)}{dim(dep_str)}")
+        print()
+        return
+
+    # Not found as either task or phase
     if as_json:
-        print(json.dumps(task_to_dict(phase, task), indent=2))
-        return
-
-    icon = ICONS.get(task["status"], "❓")
-    agent = task.get("agent_type") or "general-purpose"
-    tracking = task.get("tracking", {})
-
-    print(f"\n{bold(f'[{task_id}] {task["title"]}')}")
-    print(f"  {dim('Status:')} {icon} {task['status']}")
-    print(f"  {dim('Phase:')} {phase['name']}")
-    print(f"  {dim('Agent:')} {agent}")
-
-    deps = task.get("depends_on", [])
-    if deps:
-        print(f"  {dim('Depends on:')} {', '.join(deps)}")
-
-    if tracking.get("started_at"):
-        print(f"  {dim('Started:')} {tracking['started_at'][:10]}")
-    if tracking.get("completed_at"):
-        print(f"  {dim('Completed:')} {tracking['completed_at'][:10]}")
-    print()
+        print("null")
+    else:
+        print(f"Task or phase '{task_id}' not found!")
+    return
 
 
 def cmd_last(plan: dict, count: int | None = 5, *, as_json: bool = False) -> None:
@@ -297,16 +332,44 @@ def cmd_last(plan: dict, count: int | None = 5, *, as_json: bool = False) -> Non
     print()
 
 
-def cmd_summary(plan: dict) -> None:
-    """Output lightweight JSON summary of plan progress."""
+def cmd_summary(plan: dict, *, as_json: bool = False) -> None:
+    """Display summary of plan progress."""
     meta = plan.get("meta", {})
     summary = plan.get("summary", {})
-    output = {
-        "project": meta.get("project"),
-        "version": meta.get("version"),
-        **summary,
-    }
-    print(json.dumps(output))
+
+    if as_json:
+        output = {
+            "project": meta.get("project"),
+            "version": meta.get("version"),
+            **summary,
+        }
+        print(json.dumps(output))
+        return
+
+    # Pretty output (default)
+    project = meta.get("project", "Unknown Project")
+    version = meta.get("version", "0.0.0")
+    total = summary.get("total_tasks", 0)
+    completed = summary.get("completed_tasks", 0)
+    pct = summary.get("overall_progress", 0)
+
+    print(f"\n{bold(f'📋 {project} v{version}')}")
+    print(f"Overall Progress: {pct:.1f}% ({completed}/{total} tasks)\n")
+
+    # Phase-by-phase breakdown
+    print(bold("Phase Breakdown:"))
+    for phase in plan.get("phases", []):
+        progress = phase.get("progress", {})
+        phase_pct = progress.get("percentage", 0)
+        phase_completed = progress.get("completed", 0)
+        phase_total = progress.get("total", 0)
+        icon = ICONS.get(phase["status"], "❓")
+        phase_id = phase["id"]
+        phase_name = phase["name"]
+
+        print(f"  {icon} Phase {phase_id}: {phase_name}")
+        print(f"     {phase_pct:.1f}% ({phase_completed}/{phase_total} tasks)")
+    print()
 
 
 def cmd_validate(plan: dict, path: Path, *, as_json: bool = False) -> None:

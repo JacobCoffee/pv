@@ -36,8 +36,7 @@ Example usage:
             .build())
 """
 
-from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 
 class TaskBuilder:
@@ -49,7 +48,7 @@ class TaskBuilder:
 
     def __init__(self):
         """Initialize with default task values."""
-        self._data: Dict[str, Any] = {
+        self._data: dict[str, Any] = {
             "id": "0.1.1",
             "title": "Test Task",
             "status": "pending",
@@ -58,17 +57,17 @@ class TaskBuilder:
             "tracking": {},
         }
 
-    def with_id(self, task_id: str) -> "TaskBuilder":
+    def with_id(self, task_id: str) -> TaskBuilder:
         """Set the task ID (format: X.Y.Z)."""
         self._data["id"] = task_id
         return self
 
-    def with_title(self, title: str) -> "TaskBuilder":
+    def with_title(self, title: str) -> TaskBuilder:
         """Set the task title."""
         self._data["title"] = title
         return self
 
-    def with_status(self, status: str) -> "TaskBuilder":
+    def with_status(self, status: str) -> TaskBuilder:
         """Set the task status.
 
         Args:
@@ -76,21 +75,22 @@ class TaskBuilder:
         """
         valid_statuses = ["pending", "in_progress", "completed", "blocked", "skipped"]
         if status not in valid_statuses:
-            raise ValueError(f"Invalid status: {status}. Must be one of: {valid_statuses}")
+            msg = f"Invalid status: {status}. Must be one of: {valid_statuses}"
+            raise ValueError(msg)
         self._data["status"] = status
         return self
 
-    def with_agent(self, agent_type: Optional[str]) -> "TaskBuilder":
+    def with_agent(self, agent_type: str | None) -> TaskBuilder:
         """Set the agent type (or None for no agent)."""
         self._data["agent_type"] = agent_type
         return self
 
-    def depends_on(self, task_ids: List[str]) -> "TaskBuilder":
+    def depends_on(self, task_ids: list[str]) -> TaskBuilder:
         """Set task dependencies (list of task IDs)."""
         self._data["depends_on"] = task_ids.copy()
         return self
 
-    def with_priority(self, priority: Optional[str]) -> "TaskBuilder":
+    def with_priority(self, priority: str | None) -> TaskBuilder:
         """Set task priority.
 
         Args:
@@ -98,32 +98,34 @@ class TaskBuilder:
         """
         valid_priorities = [None, "low", "medium", "high"]
         if priority not in valid_priorities:
-            raise ValueError(f"Invalid priority: {priority}. Must be one of: {valid_priorities}")
+            msg = f"Invalid priority: {priority}. Must be one of: {valid_priorities}"
+            raise ValueError(msg)
         self._data["priority"] = priority
         return self
 
-    def with_estimated_minutes(self, minutes: Optional[int]) -> "TaskBuilder":
+    def with_estimated_minutes(self, minutes: int | None) -> TaskBuilder:
         """Set estimated time in minutes."""
         if minutes is not None and minutes < 0:
-            raise ValueError("estimated_minutes must be >= 0")
+            msg = "estimated_minutes must be >= 0"
+            raise ValueError(msg)
         self._data["estimated_minutes"] = minutes
         return self
 
-    def started_at(self, timestamp: str) -> "TaskBuilder":
+    def started_at(self, timestamp: str) -> TaskBuilder:
         """Set started_at tracking timestamp."""
         if "tracking" not in self._data:
             self._data["tracking"] = {}
         self._data["tracking"]["started_at"] = timestamp
         return self
 
-    def completed_at(self, timestamp: str) -> "TaskBuilder":
+    def completed_at(self, timestamp: str) -> TaskBuilder:
         """Set completed_at tracking timestamp."""
         if "tracking" not in self._data:
             self._data["tracking"] = {}
         self._data["tracking"]["completed_at"] = timestamp
         return self
 
-    def with_tracking(self, **kwargs) -> "TaskBuilder":
+    def with_tracking(self, **kwargs) -> TaskBuilder:
         """Set tracking fields directly.
 
         Args:
@@ -134,12 +136,12 @@ class TaskBuilder:
         self._data["tracking"].update(kwargs)
         return self
 
-    def with_subtasks(self, subtasks: List[Dict[str, Any]]) -> "TaskBuilder":
+    def with_subtasks(self, subtasks: list[dict[str, Any]]) -> TaskBuilder:
         """Add subtasks to the task."""
         self._data["subtasks"] = subtasks.copy()
         return self
 
-    def build(self) -> Dict[str, Any]:
+    def build(self) -> dict[str, Any]:
         """Build and return the task dictionary.
 
         Returns:
@@ -162,7 +164,7 @@ class PhaseBuilder:
 
     def __init__(self):
         """Initialize with default phase values."""
-        self._data: Dict[str, Any] = {
+        self._data: dict[str, Any] = {
             "id": "0",
             "name": "Test Phase",
             "description": "Test phase description",
@@ -175,22 +177,22 @@ class PhaseBuilder:
             "tasks": [],
         }
 
-    def with_id(self, phase_id: str) -> "PhaseBuilder":
+    def with_id(self, phase_id: str) -> PhaseBuilder:
         """Set the phase ID."""
         self._data["id"] = phase_id
         return self
 
-    def with_name(self, name: str) -> "PhaseBuilder":
+    def with_name(self, name: str) -> PhaseBuilder:
         """Set the phase name."""
         self._data["name"] = name
         return self
 
-    def with_description(self, description: str) -> "PhaseBuilder":
+    def with_description(self, description: str) -> PhaseBuilder:
         """Set the phase description."""
         self._data["description"] = description
         return self
 
-    def with_status(self, status: str) -> "PhaseBuilder":
+    def with_status(self, status: str) -> PhaseBuilder:
         """Set the phase status.
 
         Args:
@@ -198,11 +200,12 @@ class PhaseBuilder:
         """
         valid_statuses = ["pending", "in_progress", "completed", "blocked", "skipped"]
         if status not in valid_statuses:
-            raise ValueError(f"Invalid status: {status}. Must be one of: {valid_statuses}")
+            msg = f"Invalid status: {status}. Must be one of: {valid_statuses}"
+            raise ValueError(msg)
         self._data["status"] = status
         return self
 
-    def add_task(self, task: Dict[str, Any]) -> "PhaseBuilder":
+    def add_task(self, task: dict[str, Any]) -> PhaseBuilder:
         """Add a task to the phase.
 
         Args:
@@ -211,7 +214,7 @@ class PhaseBuilder:
         self._data["tasks"].append(task)
         return self
 
-    def with_tasks(self, tasks: List[Dict[str, Any]]) -> "PhaseBuilder":
+    def with_tasks(self, tasks: list[dict[str, Any]]) -> PhaseBuilder:
         """Set all tasks at once (replaces existing tasks).
 
         Args:
@@ -240,7 +243,7 @@ class PhaseBuilder:
         elif completed > 0:
             self._data["status"] = "in_progress"
 
-    def build(self) -> Dict[str, Any]:
+    def build(self) -> dict[str, Any]:
         """Build and return the phase dictionary.
 
         Automatically calculates progress from tasks.
@@ -260,7 +263,7 @@ class PlanBuilder:
 
     def __init__(self):
         """Initialize with default plan values."""
-        self._data: Dict[str, Any] = {
+        self._data: dict[str, Any] = {
             "meta": {
                 "project": "Test Project",
                 "version": "1.0.0",
@@ -277,37 +280,37 @@ class PlanBuilder:
             "phases": [],
         }
 
-    def with_project(self, project_name: str) -> "PlanBuilder":
+    def with_project(self, project_name: str) -> PlanBuilder:
         """Set the project name."""
         self._data["meta"]["project"] = project_name
         return self
 
-    def with_version(self, version: str) -> "PlanBuilder":
+    def with_version(self, version: str) -> PlanBuilder:
         """Set the version (must be semver format)."""
         self._data["meta"]["version"] = version
         return self
 
-    def with_schema_version(self, schema_version: str) -> "PlanBuilder":
+    def with_schema_version(self, schema_version: str) -> PlanBuilder:
         """Set the schema version."""
         self._data["meta"]["schema_version"] = schema_version
         return self
 
-    def with_business_plan_path(self, path: str) -> "PlanBuilder":
+    def with_business_plan_path(self, path: str) -> PlanBuilder:
         """Set the business plan path."""
         self._data["meta"]["business_plan_path"] = path
         return self
 
-    def with_created_at(self, timestamp: str) -> "PlanBuilder":
+    def with_created_at(self, timestamp: str) -> PlanBuilder:
         """Set the created_at timestamp."""
         self._data["meta"]["created_at"] = timestamp
         return self
 
-    def with_updated_at(self, timestamp: str) -> "PlanBuilder":
+    def with_updated_at(self, timestamp: str) -> PlanBuilder:
         """Set the updated_at timestamp."""
         self._data["meta"]["updated_at"] = timestamp
         return self
 
-    def add_phase(self, phase: Dict[str, Any]) -> "PlanBuilder":
+    def add_phase(self, phase: dict[str, Any]) -> PlanBuilder:
         """Add a phase to the plan.
 
         Args:
@@ -316,7 +319,7 @@ class PlanBuilder:
         self._data["phases"].append(phase)
         return self
 
-    def with_phases(self, phases: List[Dict[str, Any]]) -> "PlanBuilder":
+    def with_phases(self, phases: list[dict[str, Any]]) -> PlanBuilder:
         """Set all phases at once (replaces existing phases).
 
         Args:
@@ -325,7 +328,7 @@ class PlanBuilder:
         self._data["phases"] = phases.copy()
         return self
 
-    def with_decisions(self, pending: Optional[List] = None, resolved: Optional[List] = None) -> "PlanBuilder":
+    def with_decisions(self, pending: list | None = None, resolved: list | None = None) -> PlanBuilder:
         """Add decision tracking to the plan."""
         self._data["decisions"] = {
             "pending": pending or [],
@@ -333,7 +336,7 @@ class PlanBuilder:
         }
         return self
 
-    def with_blockers(self, blockers: List[Dict[str, Any]]) -> "PlanBuilder":
+    def with_blockers(self, blockers: list[dict[str, Any]]) -> PlanBuilder:
         """Add blockers to the plan."""
         self._data["blockers"] = blockers.copy()
         return self
@@ -343,10 +346,7 @@ class PlanBuilder:
         phases = self._data["phases"]
         total_phases = len(phases)
         total_tasks = sum(len(p.get("tasks", [])) for p in phases)
-        completed_tasks = sum(
-            sum(1 for t in p.get("tasks", []) if t.get("status") == "completed")
-            for p in phases
-        )
+        completed_tasks = sum(sum(1 for t in p.get("tasks", []) if t.get("status") == "completed") for p in phases)
 
         self._data["summary"] = {
             "total_phases": total_phases,
@@ -355,7 +355,7 @@ class PlanBuilder:
             "overall_progress": round(100 * completed_tasks / total_tasks, 1) if total_tasks > 0 else 0.0,
         }
 
-    def build(self) -> Dict[str, Any]:
+    def build(self) -> dict[str, Any]:
         """Build and return the plan dictionary.
 
         Automatically calculates summary from phases.
@@ -369,17 +369,18 @@ class PlanBuilder:
 
 # Convenience functions for common scenarios
 
-def build_empty_plan() -> Dict[str, Any]:
+
+def build_empty_plan() -> dict[str, Any]:
     """Build an empty plan with no phases."""
     return PlanBuilder().build()
 
 
-def build_simple_task(task_id: str = "0.1.1", title: str = "Test Task", status: str = "pending") -> Dict[str, Any]:
+def build_simple_task(task_id: str = "0.1.1", title: str = "Test Task", status: str = "pending") -> dict[str, Any]:
     """Build a simple task with minimal configuration."""
     return TaskBuilder().with_id(task_id).with_title(title).with_status(status).build()
 
 
-def build_completed_task(task_id: str = "0.1.1", title: str = "Completed Task") -> Dict[str, Any]:
+def build_completed_task(task_id: str = "0.1.1", title: str = "Completed Task") -> dict[str, Any]:
     """Build a completed task with timestamp."""
     return (
         TaskBuilder()
@@ -391,7 +392,7 @@ def build_completed_task(task_id: str = "0.1.1", title: str = "Completed Task") 
     )
 
 
-def build_simple_phase(phase_id: str = "0", name: str = "Test Phase", num_tasks: int = 2) -> Dict[str, Any]:
+def build_simple_phase(phase_id: str = "0", name: str = "Test Phase", num_tasks: int = 2) -> dict[str, Any]:
     """Build a simple phase with specified number of tasks."""
     builder = PhaseBuilder().with_id(phase_id).with_name(name)
 

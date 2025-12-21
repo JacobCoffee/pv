@@ -10,8 +10,6 @@ This module tests dependency-related functionality including:
 import json
 from argparse import Namespace
 
-import pytest
-
 from plan_view import cli
 
 

@@ -21,7 +21,7 @@ class TestTaskIDGeneration:
     """Parametric tests for task ID generation in various scenarios."""
 
     @pytest.mark.parametrize(
-        "phase_id,existing_task_ids,expected_new_id,description",
+        ("phase_id", "existing_task_ids", "expected_new_id", "description"),
         [
             # Empty phase scenarios
             ("0", [], "0.1.1", "First task in empty phase"),
@@ -143,7 +143,7 @@ class TestTaskIDGeneration:
         assert new_task["id"] == expected_new_id, f"Test case: {description}"
 
     @pytest.mark.parametrize(
-        "malformed_ids,expected_new_id,description",
+        ("malformed_ids", "expected_new_id", "description"),
         [
             # Malformed IDs with fewer than 3 parts are skipped, defaults to 0.0.1
             (["0.1"], "0.0.1", "Single malformed ID with 2 parts - defaults to 0.0.1"),
@@ -222,7 +222,7 @@ class TestTaskIDGeneration:
         assert new_task["id"] == expected_new_id, f"Test case: {description}"
 
     @pytest.mark.parametrize(
-        "invalid_ids,description",
+        ("invalid_ids", "description"),
         [
             (["0.x.y"], "Non-numeric section and task parts"),
             (["0.1.x"], "Non-numeric task part"),
@@ -290,7 +290,7 @@ class TestTaskIDGeneration:
             cli.cmd_add_task(args)
 
     @pytest.mark.parametrize(
-        "phase_count,expected_first_ids",
+        ("phase_count", "expected_first_ids"),
         [
             (1, ["0.1.1"]),
             (3, ["0.1.1", "1.1.1", "2.1.1"]),
@@ -354,7 +354,7 @@ class TestTaskIDGeneration:
             assert first_task["id"] == expected_first_ids[i]
 
     @pytest.mark.parametrize(
-        "task_count,expected_last_id",
+        ("task_count", "expected_last_id"),
         [
             (1, "0.1.1"),
             (5, "0.1.5"),
@@ -403,7 +403,7 @@ class TestTaskIDGeneration:
             args = Namespace(
                 file=tmp_plan_path,
                 phase="0",
-                title=f"Task {i+1}",
+                title=f"Task {i + 1}",
                 agent=None,
                 deps=None,
                 quiet=True,
@@ -419,7 +419,7 @@ class TestTaskIDGeneration:
 
         # Verify all IDs are sequential
         for i, task in enumerate(result_plan["phases"][0]["tasks"]):
-            assert task["id"] == f"0.1.{i+1}"
+            assert task["id"] == f"0.1.{i + 1}"
 
 
 class TestTaskIDGenerationEdgeCases:
@@ -688,7 +688,7 @@ class TestTaskIDGenerationBoundaries:
     """Boundary value tests for task ID generation."""
 
     @pytest.mark.parametrize(
-        "last_task_number,expected_new_number",
+        ("last_task_number", "expected_new_number"),
         [
             (0, 1),  # Edge case: task number 0 (shouldn't happen but handle it)
             (1, 2),  # Normal case: increment from 1
@@ -747,7 +747,7 @@ class TestTaskIDGenerationBoundaries:
         assert new_task["id"] == f"0.1.{expected_new_number}"
 
     @pytest.mark.parametrize(
-        "last_section_number,expected_new_section",
+        ("last_section_number", "expected_new_section"),
         [
             (1, 1),  # Normal: stays in same section, increments task
             (99, 99),  # Large section number

@@ -4,7 +4,7 @@ This file shows practical examples of using the builder pattern
 for creating test fixtures in real-world scenarios.
 """
 
-from tests.builders import PlanBuilder, PhaseBuilder, TaskBuilder
+from tests.builders import PhaseBuilder, PlanBuilder, TaskBuilder
 
 
 def test_simple_workflow_demo():
@@ -173,11 +173,7 @@ def test_blocked_workflow_demo():
             .with_id("0")
             .with_name("API Integration")
             .add_task(
-                TaskBuilder()
-                .with_id("0.1.1")
-                .with_title("Setup project structure")
-                .with_status("completed")
-                .build()
+                TaskBuilder().with_id("0.1.1").with_title("Setup project structure").with_status("completed").build()
             )
             .add_task(
                 TaskBuilder()
@@ -450,8 +446,4 @@ def test_prebuilt_fixture_demo(sample_plan_v2, completed_plan_v2):
 
     # Use completed_plan_v2 for tests needing a fully completed plan
     assert completed_plan_v2["summary"]["overall_progress"] == 100.0
-    assert all(
-        task["status"] == "completed"
-        for phase in completed_plan_v2["phases"]
-        for task in phase["tasks"]
-    )
+    assert all(task["status"] == "completed" for phase in completed_plan_v2["phases"] for task in phase["tasks"])

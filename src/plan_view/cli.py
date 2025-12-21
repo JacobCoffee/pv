@@ -8,6 +8,7 @@ from plan_view.commands.edit import (
     cmd_add_phase,
     cmd_add_task,
     cmd_block,
+    cmd_bug,
     cmd_defer,
     cmd_done,
     cmd_init,
@@ -104,6 +105,7 @@ __all__ = [
     "cmd_block",
     "cmd_skip",
     "cmd_defer",
+    "cmd_bug",
     "cmd_rm",
     # Entry point
     "main",
@@ -154,7 +156,8 @@ def main() -> None:
     last_p.add_argument("-a", "--all", action="store_true")
     last_p.add_argument("--json", action="store_true", default=None)
 
-    subparsers.add_parser("summary", aliases=["s"], add_help=False)
+    summary_p = subparsers.add_parser("summary", aliases=["s"], add_help=False)
+    summary_p.add_argument("--json", action="store_true", default=None)
 
     subparsers.add_parser("help", aliases=["h"], add_help=False)
 
@@ -215,6 +218,11 @@ def main() -> None:
     defer_p.add_argument("-q", "--quiet", action="store_true")
     defer_p.add_argument("-d", "--dry-run", action="store_true")
 
+    bug_p = subparsers.add_parser("bug", add_help=False)
+    bug_p.add_argument("id")
+    bug_p.add_argument("-q", "--quiet", action="store_true")
+    bug_p.add_argument("-d", "--dry-run", action="store_true")
+
     # Remove
     rm_p = subparsers.add_parser("rm", add_help=False)
     rm_p.add_argument("type", choices=["phase", "task"])
@@ -258,6 +266,9 @@ def main() -> None:
         case "defer":
             cmd_defer(args)
             return
+        case "bug":
+            cmd_bug(args)
+            return
         case "rm":
             cmd_rm(args)
             return
@@ -283,7 +294,7 @@ def main() -> None:
         case "last" | "l":
             cmd_last(plan, None if args.all else args.count, as_json=as_json)
         case "summary" | "s":
-            cmd_summary(plan)
+            cmd_summary(plan, as_json=as_json)
         case "validate" | "v":
             cmd_validate(plan, args.file, as_json=as_json)
         case _:

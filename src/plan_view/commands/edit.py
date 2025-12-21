@@ -4,8 +4,9 @@ import argparse
 import contextlib
 import sys
 
+from plan_view.decorators import require_plan
 from plan_view.formatting import VALID_STATUSES, now_iso
-from plan_view.io import load_plan, save_plan
+from plan_view.io import save_plan
 from plan_view.state import (
     find_phase,
     find_task,
@@ -54,14 +55,9 @@ def cmd_init(args: argparse.Namespace) -> None:
         print(f"{_prefix(args)} Created {path} for '{args.name}'")
 
 
-def cmd_add_phase(args: argparse.Namespace) -> None:
+@require_plan
+def cmd_add_phase(plan: dict, args: argparse.Namespace) -> None:
     """Add a new phase."""
-    path = args.file
-    plan = load_plan(path)
-    if plan is None:
-        sys.exit(1)
-    assert plan is not None
-
     # Determine next phase ID
     existing_ids = [int(p["id"]) for p in plan["phases"] if p["id"].isdigit()]
     next_id = str(max(existing_ids, default=-1) + 1)
@@ -77,19 +73,14 @@ def cmd_add_phase(args: argparse.Namespace) -> None:
 
     plan["phases"].append(phase)
     if not _is_dry_run(args):
-        save_plan(path, plan)
+        save_plan(args.file, plan)
     if not getattr(args, "quiet", False):
         print(f"{_prefix(args)} Added Phase {next_id}: {args.name}")
 
 
-def cmd_add_task(args: argparse.Namespace) -> None:
+@require_plan
+def cmd_add_task(plan: dict, args: argparse.Namespace) -> None:
     """Add a new task to a phase."""
-    path = args.file
-    plan = load_plan(path)
-    if plan is None:
-        sys.exit(1)
-    assert plan is not None
-
     phase = find_phase(plan, args.phase)
     if phase is None:
         print(f"Error: Phase '{args.phase}' not found\n", file=sys.stderr)
@@ -127,19 +118,14 @@ def cmd_add_task(args: argparse.Namespace) -> None:
 
     phase["tasks"].append(task)
     if not _is_dry_run(args):
-        save_plan(path, plan)
+        save_plan(args.file, plan)
     if not getattr(args, "quiet", False):
         print(f"{_prefix(args)} Added [{next_id}] {args.title}")
 
 
-def cmd_set(args: argparse.Namespace) -> None:
+@require_plan
+def cmd_set(plan: dict, args: argparse.Namespace) -> None:
     """Set a task field."""
-    path = args.file
-    plan = load_plan(path)
-    if plan is None:
-        sys.exit(1)
-    assert plan is not None
-
     result = find_task(plan, args.id)
     if result is None:
         print(f"Error: Task '{args.id}' not found\n", file=sys.stderr)
@@ -167,7 +153,7 @@ def cmd_set(args: argparse.Namespace) -> None:
         sys.exit(1)
 
     if not _is_dry_run(args):
-        save_plan(path, plan)
+        save_plan(args.file, plan)
     if not getattr(args, "quiet", False):
         print(f"{_prefix(args)} [{args.id}] {args.field} → {args.value}")
 
@@ -200,14 +186,9 @@ def cmd_skip(args: argparse.Namespace) -> None:
     cmd_set(args)
 
 
-def cmd_defer(args: argparse.Namespace) -> None:
+@require_plan
+def cmd_defer(plan: dict, args: argparse.Namespace) -> None:
     """Move task to deferred phase."""
-    path = args.file
-    plan = load_plan(path)
-    if plan is None:
-        sys.exit(1)
-    assert plan is not None
-
     result = find_task(plan, args.id)
     if result is None:
         print(f"Error: Task '{args.id}' not found\n", file=sys.stderr)
@@ -252,19 +233,66 @@ def cmd_defer(args: argparse.Namespace) -> None:
     assert isinstance(task_list, list)
     task_list.append(task)
     if not _is_dry_run(args):
-        save_plan(path, plan)
+        save_plan(args.file, plan)
     if not getattr(args, "quiet", False):
         print(f"{_prefix(args)} [{old_id}] → [{new_id}] (deferred)")
 
 
-def cmd_rm(args: argparse.Namespace) -> None:
-    """Remove a phase or task."""
-    path = args.file
-    plan = load_plan(path)
-    if plan is None:
+@require_plan
+def cmd_bug(plan: dict, args: argparse.Namespace) -> None:
+    """Move task to bugs phase."""
+    result = find_task(plan, args.id)
+    if result is None:
+        print(f"Error: Task '{args.id}' not found\n", file=sys.stderr)
+        print(format_task_suggestions(plan), file=sys.stderr)
         sys.exit(1)
-    assert plan is not None
+    assert result is not None
 
+    old_phase, task = result
+
+    # Find or create bugs phase
+    bugs = find_phase(plan, "99")
+    if bugs is None:
+        bugs = {
+            "id": "99",
+            "name": "Bugs",
+            "description": "Tasks identified as bugs requiring fixes",
+            "status": "pending",
+            "progress": {"completed": 0, "total": 0, "percentage": 0},
+            "tasks": [],
+        }
+        plan["phases"].append(bugs)
+
+    # Remove from old phase
+    old_phase["tasks"].remove(task)
+    old_id = task["id"]
+
+    # Generate new ID for bugs phase
+    existing_tasks = bugs.get("tasks", [])
+    assert isinstance(existing_tasks, list)
+    max_task = 0
+    for t in existing_tasks:
+        assert isinstance(t, dict)
+        parts = str(t["id"]).split(".")
+        if len(parts) >= 3:
+            with contextlib.suppress(ValueError):
+                max_task = max(max_task, int(parts[2]))
+    new_id = f"99.1.{max_task + 1}"
+    task["id"] = new_id
+
+    # Add to bugs phase
+    task_list = bugs["tasks"]
+    assert isinstance(task_list, list)
+    task_list.append(task)
+    if not _is_dry_run(args):
+        save_plan(args.file, plan)
+    if not getattr(args, "quiet", False):
+        print(f"{_prefix(args)} [{old_id}] → [{new_id}] (bug)")
+
+
+@require_plan
+def cmd_rm(plan: dict, args: argparse.Namespace) -> None:
+    """Remove a phase or task."""
     if args.type == "task":
         result = find_task(plan, args.id)
         if result is None:
@@ -275,7 +303,7 @@ def cmd_rm(args: argparse.Namespace) -> None:
         phase, task = result
         phase["tasks"].remove(task)
         if not _is_dry_run(args):
-            save_plan(path, plan)
+            save_plan(args.file, plan)
         if not getattr(args, "quiet", False):
             print(f"{_prefix(args)} Removed task [{args.id}]")
 
@@ -288,6 +316,6 @@ def cmd_rm(args: argparse.Namespace) -> None:
         assert phase is not None
         plan["phases"].remove(phase)
         if not _is_dry_run(args):
-            save_plan(path, plan)
+            save_plan(args.file, plan)
         if not getattr(args, "quiet", False):
             print(f"{_prefix(args)} Removed phase {args.id}")
