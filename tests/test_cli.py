@@ -379,7 +379,7 @@ class TestErrorSuggestions:
 
     def test_error_shows_phase_suggestions(self, sample_plan_file, capsys):
         """Test phase not found error shows suggestions."""
-        args = Namespace(file=sample_plan_file, phase="99", title="Test", agent=None, deps=None, quiet=False)
+        args = Namespace(file=sample_plan_file, phase="nonexistent", title="Test", agent=None, deps=None, quiet=False)
         with pytest.raises(SystemExit):
             cli.cmd_add_task(args)
         captured = capsys.readouterr()
@@ -592,7 +592,7 @@ class TestFinding:
 
     def test_find_phase_not_found(self, sample_plan):
         """Test finding a non-existent phase."""
-        phase = cli.find_phase(sample_plan, "99")
+        phase = cli.find_phase(sample_plan, "nonexistent")
         assert phase is None
 
     def test_task_to_dict(self, sample_plan):
@@ -769,13 +769,13 @@ class TestViewCommands:
 
     def test_cmd_get_phase_not_found(self, sample_plan, capsys):
         """Test get command for non-existent phase."""
-        cli.cmd_get(sample_plan, "99", as_json=False)
+        cli.cmd_get(sample_plan, "nonexistent", as_json=False)
         captured = capsys.readouterr()
         assert "not found" in captured.out
 
     def test_cmd_get_phase_not_found_json(self, sample_plan, capsys):
         """Test get command JSON for non-existent phase."""
-        cli.cmd_get(sample_plan, "99", as_json=True)
+        cli.cmd_get(sample_plan, "nonexistent", as_json=True)
         captured = capsys.readouterr()
         assert captured.out.strip() == "null"
 
@@ -923,6 +923,81 @@ class TestValidateCommand:
         # Should show the path to the invalid field
         assert "Path:" in captured.out
 
+    def test_cmd_bugs_text(self, sample_plan, capsys):
+        """Test bugs command text output."""
+        cli.cmd_bugs(sample_plan, as_json=False)
+        captured = capsys.readouterr()
+        assert "Bugs" in captured.out
+
+    def test_cmd_bugs_missing_phase(self, capsys):
+        """Test bugs command when phase doesn't exist."""
+        # Create a plan without the bugs phase
+        plan = {
+            "meta": {"project": "Test", "version": "1.0.0"},
+            "summary": {},
+            "phases": [],
+        }
+        cli.cmd_bugs(plan, as_json=False)
+        captured = capsys.readouterr()
+        assert "No bugs phase found!" in captured.out
+
+    def test_cmd_bugs_missing_phase_json(self, capsys):
+        """Test bugs command JSON when phase doesn't exist."""
+        plan = {
+            "meta": {"project": "Test", "version": "1.0.0"},
+            "summary": {},
+            "phases": [],
+        }
+        cli.cmd_bugs(plan, as_json=True)
+        captured = capsys.readouterr()
+        assert captured.out.strip() == "null"
+
+    def test_cmd_bugs_json(self, sample_plan, capsys):
+        """Test bugs command JSON output."""
+        cli.cmd_bugs(sample_plan, as_json=True)
+        captured = capsys.readouterr()
+        result = json.loads(captured.out)
+        assert result["id"] == "99"
+        assert result["name"] == "Bugs"
+
+    def test_cmd_bugs_with_tasks(self, sample_plan_file, capsys):
+        """Test bugs command shows tasks."""
+        # Add a bug task first
+        args = Namespace(file=sample_plan_file, id="Test bug task")
+        cli.cmd_bug(args)
+
+        # Now view bugs
+        plan = json.loads(sample_plan_file.read_text())
+        cli.cmd_bugs(plan, as_json=False)
+        captured = capsys.readouterr()
+        assert "Test bug task" in captured.out
+
+    def test_cmd_deferred_text(self, sample_plan, capsys):
+        """Test deferred command text output."""
+        cli.cmd_deferred(sample_plan, as_json=False)
+        captured = capsys.readouterr()
+        assert "Deferred" in captured.out
+
+    def test_cmd_deferred_json(self, sample_plan, capsys):
+        """Test deferred command JSON output."""
+        cli.cmd_deferred(sample_plan, as_json=True)
+        captured = capsys.readouterr()
+        result = json.loads(captured.out)
+        assert result["id"] == "deferred"
+        assert result["name"] == "Deferred"
+
+    def test_cmd_deferred_with_tasks(self, sample_plan_file, capsys):
+        """Test deferred command shows tasks."""
+        # Add a deferred task first
+        args = Namespace(file=sample_plan_file, id="Deferred task for later")
+        cli.cmd_defer(args)
+
+        # Now view deferred
+        plan = json.loads(sample_plan_file.read_text())
+        cli.cmd_deferred(plan, as_json=False)
+        captured = capsys.readouterr()
+        assert "Deferred task for later" in captured.out
+
 
 # ============ EDIT COMMANDS ============
 
@@ -960,16 +1035,18 @@ class TestEditCommands:
         captured = capsys.readouterr()
         assert "Added Phase" in captured.out
         plan = json.loads(empty_plan_file.read_text())
-        assert len(plan["phases"]) == 1
-        assert plan["phases"][0]["name"] == "New Phase"
+        # 2 special phases (deferred, bugs) + 1 new = 3
+        assert len(plan["phases"]) == 3
+        # New phase should be last (after special phases)
+        assert plan["phases"][-1]["name"] == "New Phase"
 
     def test_cmd_add_phase_increments_id(self, sample_plan_file, capsys):
         """Test phase ID increments correctly."""
         args = Namespace(file=sample_plan_file, name="Phase 3", desc=None)
         cli.cmd_add_phase(args)
         plan = json.loads(sample_plan_file.read_text())
-        # Sample plan has phases 0 and 1, new should be 2
-        assert plan["phases"][-1]["id"] == "2"
+        # Sample plan has phases 0, 1 and bugs phase 99, new should be 100
+        assert plan["phases"][-1]["id"] == "100"
 
     def test_cmd_add_phase_file_not_found(self, tmp_path, capsys):
         """Test add_phase with non-existent file."""
@@ -1008,27 +1085,29 @@ class TestEditCommands:
 
     def test_cmd_add_task_to_empty_phase(self, empty_plan_file, capsys):
         """Test adding first task to an empty phase."""
-        # First add a phase
+        # First add a phase (gets ID 100 since 99 is bugs phase)
         args = Namespace(file=empty_plan_file, name="Phase", desc="Test")
         cli.cmd_add_phase(args)
 
-        # Then add task
+        # Then add task to the new phase
         args = Namespace(
             file=empty_plan_file,
-            phase="0",
+            phase="100",
             title="First Task",
             agent=None,
             deps=None,
         )
         cli.cmd_add_task(args)
         plan = json.loads(empty_plan_file.read_text())
-        assert plan["phases"][0]["tasks"][0]["id"] == "0.1.1"
+        # Find the phase we added (last one)
+        new_phase = next(p for p in plan["phases"] if p["id"] == "100")
+        assert new_phase["tasks"][0]["id"] == "100.1.1"
 
     def test_cmd_add_task_phase_not_found(self, sample_plan_file, capsys):
         """Test adding task to non-existent phase."""
         args = Namespace(
             file=sample_plan_file,
-            phase="99",
+            phase="nonexistent",
             title="Task",
             agent=None,
             deps=None,
@@ -1164,14 +1243,15 @@ class TestEditCommands:
         assert deferred["tasks"][0]["title"] == "Feature X"
         assert deferred["tasks"][0]["id"] == "deferred.1.1"
 
-    def test_cmd_defer_creates_phase(self, sample_plan_file, capsys):
-        """Test defer creates deferred phase if it doesn't exist."""
+    def test_cmd_defer_phase_structure(self, sample_plan_file, capsys):
+        """Test deferred phase has correct structure."""
         plan = json.loads(sample_plan_file.read_text())
-        assert not any(p["id"] == "deferred" for p in plan["phases"])
-        args = Namespace(file=sample_plan_file, id="1.1.1")
-        cli.cmd_defer(args)
-        plan = json.loads(sample_plan_file.read_text())
-        assert any(p["id"] == "deferred" for p in plan["phases"])
+        # Deferred phase should exist by default
+        deferred = next(p for p in plan["phases"] if p["id"] == "deferred")
+        assert deferred["name"] == "Deferred"
+        assert deferred["description"] == "Tasks postponed for later consideration"
+        assert deferred["status"] == "pending"
+        assert deferred["tasks"] == []
 
     def test_cmd_defer_uses_existing_phase(self, sample_plan_file, capsys):
         """Test defer reuses existing deferred phase and increments ID."""
@@ -1251,13 +1331,19 @@ class TestEditCommands:
         # Should still work, defaulting to 1 for the new task
         assert deferred["tasks"][2]["id"] == "deferred.1.1"
 
-    def test_cmd_defer_task_not_found(self, sample_plan_file, capsys):
-        """Test defer with non-existent task fails."""
-        args = Namespace(file=sample_plan_file, id="99.99.99")
-        with pytest.raises(SystemExit):
-            cli.cmd_defer(args)
+    def test_cmd_defer_creates_new_task_when_not_found(self, sample_plan_file, capsys):
+        """Test defer with non-existent task creates a new deferred task."""
+        args = Namespace(file=sample_plan_file, id="Investigate performance issue")
+        cli.cmd_defer(args)
         captured = capsys.readouterr()
-        assert "not found" in captured.err
+        assert "Added" in captured.out
+        assert "Investigate performance issue" in captured.out
+
+        # Verify task was created in deferred phase
+        plan = json.loads(sample_plan_file.read_text())
+        deferred = next(p for p in plan["phases"] if p["id"] == "deferred")
+        new_task = next(t for t in deferred["tasks"] if t["title"] == "Investigate performance issue")
+        assert new_task["status"] == "pending"
 
     def test_cmd_defer_file_not_found(self, tmp_path, capsys):
         """Test defer with non-existent file fails."""
@@ -1289,11 +1375,13 @@ class TestEditCommands:
         captured = capsys.readouterr()
         assert "Removed phase" in captured.out
         plan = json.loads(sample_plan_file.read_text())
-        assert len(plan["phases"]) == 1
+        # Sample plan has 0, 1 + special phases (deferred, 99). After removing 1, we have 3.
+        assert len(plan["phases"]) == 3
+        assert not any(p["id"] == "1" for p in plan["phases"])
 
     def test_cmd_rm_phase_not_found(self, sample_plan_file, capsys):
         """Test removing non-existent phase fails."""
-        args = Namespace(file=sample_plan_file, type="phase", id="99")
+        args = Namespace(file=sample_plan_file, type="phase", id="nonexistent")
         with pytest.raises(SystemExit):
             cli.cmd_rm(args)
         captured = capsys.readouterr()
@@ -1605,6 +1693,34 @@ class TestCLIMain:
         cli.main()
         captured = capsys.readouterr()
         assert "deferred" in captured.out
+
+    def test_main_bugs(self, sample_plan_file, capsys, monkeypatch):
+        """Test bugs command via CLI."""
+        monkeypatch.setattr(sys, "argv", ["pv", "-f", str(sample_plan_file), "bugs"])
+        cli.main()
+        captured = capsys.readouterr()
+        assert "Bugs" in captured.out
+
+    def test_main_bugs_b_alias(self, sample_plan_file, capsys, monkeypatch):
+        """Test bugs command with b alias."""
+        monkeypatch.setattr(sys, "argv", ["pv", "-f", str(sample_plan_file), "b"])
+        cli.main()
+        captured = capsys.readouterr()
+        assert "Bugs" in captured.out
+
+    def test_main_deferred(self, sample_plan_file, capsys, monkeypatch):
+        """Test deferred command via CLI."""
+        monkeypatch.setattr(sys, "argv", ["pv", "-f", str(sample_plan_file), "deferred"])
+        cli.main()
+        captured = capsys.readouterr()
+        assert "Deferred" in captured.out
+
+    def test_main_deferred_d_alias(self, sample_plan_file, capsys, monkeypatch):
+        """Test deferred command with d alias."""
+        monkeypatch.setattr(sys, "argv", ["pv", "-f", str(sample_plan_file), "d"])
+        cli.main()
+        captured = capsys.readouterr()
+        assert "Deferred" in captured.out
 
     def test_main_rm_task(self, sample_plan_file, capsys, monkeypatch):
         """Test rm task command via CLI."""

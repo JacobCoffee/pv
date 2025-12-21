@@ -19,7 +19,9 @@ from plan_view.commands.edit import (
 )
 from plan_view.commands.view import (
     HELP_TEXT,
+    cmd_bugs,
     cmd_current,
+    cmd_deferred,
     cmd_get,
     cmd_last,
     cmd_next,
@@ -94,6 +96,8 @@ __all__ = [
     "cmd_get",
     "cmd_last",
     "cmd_summary",
+    "cmd_bugs",
+    "cmd_deferred",
     "cmd_validate",
     # Edit Commands
     "cmd_init",
@@ -158,6 +162,12 @@ def main() -> None:
 
     summary_p = subparsers.add_parser("summary", aliases=["s"], add_help=False)
     summary_p.add_argument("--json", action="store_true", default=None)
+
+    bugs_p = subparsers.add_parser("bugs", aliases=["b"], add_help=False)
+    bugs_p.add_argument("--json", action="store_true", default=None)
+
+    deferred_p = subparsers.add_parser("deferred", aliases=["d"], add_help=False)
+    deferred_p.add_argument("--json", action="store_true", default=None)
 
     subparsers.add_parser("help", aliases=["h"], add_help=False)
 
@@ -295,6 +305,10 @@ def main() -> None:
             cmd_last(plan, None if args.all else args.count, as_json=as_json)
         case "summary" | "s":
             cmd_summary(plan, as_json=as_json)
+        case "bugs" | "b":
+            cmd_bugs(plan, as_json=as_json)
+        case "deferred" | "d":
+            cmd_deferred(plan, as_json=as_json)
         case "validate" | "v":
             cmd_validate(plan, args.file, as_json=as_json)
         case _:

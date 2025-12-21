@@ -16,7 +16,7 @@ def tmp_plan_path(tmp_path):
 
 @pytest.fixture
 def empty_plan():
-    """Return a minimal valid plan structure."""
+    """Return a minimal valid plan structure with standard special phases."""
     return {
         "meta": {
             "project": "Test",
@@ -26,12 +26,29 @@ def empty_plan():
             "business_plan_path": ".claude/BUSINESS_PLAN.md",
         },
         "summary": {
-            "total_phases": 0,
+            "total_phases": 2,
             "total_tasks": 0,
             "completed_tasks": 0,
             "overall_progress": 0,
         },
-        "phases": [],
+        "phases": [
+            {
+                "id": "deferred",
+                "name": "Deferred",
+                "description": "Tasks postponed for later consideration",
+                "status": "pending",
+                "progress": {"completed": 0, "total": 0, "percentage": 0},
+                "tasks": [],
+            },
+            {
+                "id": "99",
+                "name": "Bugs",
+                "description": "Tasks identified as bugs requiring fixes",
+                "status": "pending",
+                "progress": {"completed": 0, "total": 0, "percentage": 0},
+                "tasks": [],
+            },
+        ],
     }
 
 
@@ -47,7 +64,7 @@ def sample_plan():
             "business_plan_path": ".claude/BUSINESS_PLAN.md",
         },
         "summary": {
-            "total_phases": 2,
+            "total_phases": 4,
             "total_tasks": 4,
             "completed_tasks": 1,
             "overall_progress": 25.0,
@@ -102,6 +119,22 @@ def sample_plan():
                         "tracking": {},
                     },
                 ],
+            },
+            {
+                "id": "deferred",
+                "name": "Deferred",
+                "description": "Tasks postponed for later consideration",
+                "status": "pending",
+                "progress": {"completed": 0, "total": 0, "percentage": 0},
+                "tasks": [],
+            },
+            {
+                "id": "99",
+                "name": "Bugs",
+                "description": "Tasks identified as bugs requiring fixes",
+                "status": "pending",
+                "progress": {"completed": 0, "total": 0, "percentage": 0},
+                "tasks": [],
             },
         ],
     }

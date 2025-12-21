@@ -1,5 +1,13 @@
 """Plan state calculations and lookup operations."""
 
+# Special phases that are not part of regular workflow
+SPECIAL_PHASE_IDS = {"deferred", "99"}
+
+
+def _is_special_phase(phase: dict) -> bool:
+    """Check if phase is a special holding phase (deferred/bugs)."""
+    return phase["id"] in SPECIAL_PHASE_IDS
+
 
 def recalculate_progress(plan: dict) -> None:
     """Recalculate all progress fields."""
@@ -35,22 +43,28 @@ def recalculate_progress(plan: dict) -> None:
 
 
 def get_current_phase(plan: dict) -> dict | None:
-    """Find the current in_progress or first pending phase."""
+    """Find the current in_progress or first pending phase (skips special phases)."""
     for phase in plan.get("phases", []):
+        if _is_special_phase(phase):
+            continue
         if phase["status"] == "in_progress":
             return phase
     for phase in plan.get("phases", []):
+        if _is_special_phase(phase):
+            continue
         if phase["status"] == "pending":
             return phase
     return None
 
 
 def get_next_task(plan: dict) -> tuple[dict, dict] | None:
-    """Find the next actionable task with all dependencies met."""
+    """Find the next actionable task with all dependencies met (skips special phases)."""
     # Build task status lookup for O(1) dependency checks
     task_status = {t["id"]: t["status"] for p in plan.get("phases", []) for t in p.get("tasks", [])}
 
     for phase in plan.get("phases", []):
+        if _is_special_phase(phase):
+            continue
         if phase["status"] in ("completed", "skipped"):
             continue
         for task in phase.get("tasks", []):

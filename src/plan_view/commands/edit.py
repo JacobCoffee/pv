@@ -41,12 +41,29 @@ def cmd_init(args: argparse.Namespace) -> None:
             "business_plan_path": ".claude/BUSINESS_PLAN.md",
         },
         "summary": {
-            "total_phases": 0,
+            "total_phases": 2,
             "total_tasks": 0,
             "completed_tasks": 0,
             "overall_progress": 0,
         },
-        "phases": [],
+        "phases": [
+            {
+                "id": "deferred",
+                "name": "Deferred",
+                "description": "Tasks postponed for later consideration",
+                "status": "pending",
+                "progress": {"completed": 0, "total": 0, "percentage": 0},
+                "tasks": [],
+            },
+            {
+                "id": "99",
+                "name": "Bugs",
+                "description": "Tasks identified as bugs requiring fixes",
+                "status": "pending",
+                "progress": {"completed": 0, "total": 0, "percentage": 0},
+                "tasks": [],
+            },
+        ],
     }
 
     if not _is_dry_run(args):
@@ -188,16 +205,7 @@ def cmd_skip(args: argparse.Namespace) -> None:
 
 @require_plan
 def cmd_defer(plan: dict, args: argparse.Namespace) -> None:
-    """Move task to deferred phase."""
-    result = find_task(plan, args.id)
-    if result is None:
-        print(f"Error: Task '{args.id}' not found\n", file=sys.stderr)
-        print(format_task_suggestions(plan), file=sys.stderr)
-        sys.exit(1)
-    assert result is not None
-
-    old_phase, task = result
-
+    """Move task to deferred phase, or create a new deferred task if input is not an existing task ID."""
     # Find or create deferred phase
     deferred = find_phase(plan, "deferred")
     if deferred is None:
@@ -211,11 +219,7 @@ def cmd_defer(plan: dict, args: argparse.Namespace) -> None:
         }
         plan["phases"].append(deferred)
 
-    # Remove from old phase
-    old_phase["tasks"].remove(task)
-    old_id = task["id"]
-
-    # Generate new ID for deferred phase
+    # Generate next ID for deferred phase
     existing_tasks = deferred.get("tasks", [])
     assert isinstance(existing_tasks, list)
     max_task = 0
@@ -226,30 +230,44 @@ def cmd_defer(plan: dict, args: argparse.Namespace) -> None:
             with contextlib.suppress(ValueError):
                 max_task = max(max_task, int(parts[2]))
     new_id = f"deferred.1.{max_task + 1}"
-    task["id"] = new_id
 
-    # Add to deferred phase
-    task_list = deferred["tasks"]
-    assert isinstance(task_list, list)
-    task_list.append(task)
-    if not _is_dry_run(args):
-        save_plan(args.file, plan)
-    if not getattr(args, "quiet", False):
-        print(f"{_prefix(args)} [{old_id}] → [{new_id}] (deferred)")
+    # Try to find existing task to move
+    result = find_task(plan, args.id)
+    if result is not None:
+        # Move existing task to deferred
+        old_phase, task = result
+        old_phase["tasks"].remove(task)
+        old_id = task["id"]
+        task["id"] = new_id
+        task_list = deferred["tasks"]
+        assert isinstance(task_list, list)
+        task_list.append(task)
+        if not _is_dry_run(args):
+            save_plan(args.file, plan)
+        if not getattr(args, "quiet", False):
+            print(f"{_prefix(args)} [{old_id}] → [{new_id}] (deferred)")
+    else:
+        # Create new deferred task with input as title
+        task = {
+            "id": new_id,
+            "title": args.id,  # Use input as title
+            "status": "pending",
+            "agent_type": None,
+            "depends_on": [],
+            "tracking": {},
+        }
+        task_list = deferred["tasks"]
+        assert isinstance(task_list, list)
+        task_list.append(task)
+        if not _is_dry_run(args):
+            save_plan(args.file, plan)
+        if not getattr(args, "quiet", False):
+            print(f"{_prefix(args)} Added [{new_id}] {args.id} (deferred)")
 
 
 @require_plan
 def cmd_bug(plan: dict, args: argparse.Namespace) -> None:
-    """Move task to bugs phase."""
-    result = find_task(plan, args.id)
-    if result is None:
-        print(f"Error: Task '{args.id}' not found\n", file=sys.stderr)
-        print(format_task_suggestions(plan), file=sys.stderr)
-        sys.exit(1)
-    assert result is not None
-
-    old_phase, task = result
-
+    """Move task to bugs phase, or create a new bug if input is not an existing task ID."""
     # Find or create bugs phase
     bugs = find_phase(plan, "99")
     if bugs is None:
@@ -263,11 +281,7 @@ def cmd_bug(plan: dict, args: argparse.Namespace) -> None:
         }
         plan["phases"].append(bugs)
 
-    # Remove from old phase
-    old_phase["tasks"].remove(task)
-    old_id = task["id"]
-
-    # Generate new ID for bugs phase
+    # Generate next ID for bugs phase
     existing_tasks = bugs.get("tasks", [])
     assert isinstance(existing_tasks, list)
     max_task = 0
@@ -278,16 +292,39 @@ def cmd_bug(plan: dict, args: argparse.Namespace) -> None:
             with contextlib.suppress(ValueError):
                 max_task = max(max_task, int(parts[2]))
     new_id = f"99.1.{max_task + 1}"
-    task["id"] = new_id
 
-    # Add to bugs phase
-    task_list = bugs["tasks"]
-    assert isinstance(task_list, list)
-    task_list.append(task)
-    if not _is_dry_run(args):
-        save_plan(args.file, plan)
-    if not getattr(args, "quiet", False):
-        print(f"{_prefix(args)} [{old_id}] → [{new_id}] (bug)")
+    # Try to find existing task to move
+    result = find_task(plan, args.id)
+    if result is not None:
+        # Move existing task to bugs
+        old_phase, task = result
+        old_phase["tasks"].remove(task)
+        old_id = task["id"]
+        task["id"] = new_id
+        task_list = bugs["tasks"]
+        assert isinstance(task_list, list)
+        task_list.append(task)
+        if not _is_dry_run(args):
+            save_plan(args.file, plan)
+        if not getattr(args, "quiet", False):
+            print(f"{_prefix(args)} [{old_id}] → [{new_id}] (bug)")
+    else:
+        # Create new bug task with input as title
+        task = {
+            "id": new_id,
+            "title": args.id,  # Use input as title
+            "status": "pending",
+            "agent_type": None,
+            "depends_on": [],
+            "tracking": {},
+        }
+        task_list = bugs["tasks"]
+        assert isinstance(task_list, list)
+        task_list.append(task)
+        if not _is_dry_run(args):
+            save_plan(args.file, plan)
+        if not getattr(args, "quiet", False):
+            print(f"{_prefix(args)} Added [{new_id}] {args.id} (bug)")
 
 
 @require_plan

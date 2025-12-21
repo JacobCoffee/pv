@@ -45,18 +45,15 @@ class TestBugCommand:
         assert bugs["tasks"][0]["title"] == "Feature X"
         assert bugs["tasks"][0]["id"] == "99.1.1"
 
-    def test_cmd_bug_creates_phase(self, sample_plan_file, capsys):
-        """Test bug creates bugs phase if it doesn't exist."""
+    def test_cmd_bug_phase_structure(self, sample_plan_file, capsys):
+        """Test bugs phase has correct structure."""
         plan = json.loads(sample_plan_file.read_text())
-        assert not any(p["id"] == "99" for p in plan["phases"])
-        args = Namespace(file=sample_plan_file, id="1.1.1")
-        cli.cmd_bug(args)
-        plan = json.loads(sample_plan_file.read_text())
-        assert any(p["id"] == "99" for p in plan["phases"])
-        # Verify phase has correct name and description
+        # Bugs phase should exist by default
         bugs = next(p for p in plan["phases"] if p["id"] == "99")
         assert bugs["name"] == "Bugs"
         assert bugs["description"] == "Tasks identified as bugs requiring fixes"
+        assert bugs["status"] == "pending"
+        assert bugs["tasks"] == []
 
     def test_cmd_bug_uses_existing_phase(self, sample_plan_file, capsys):
         """Test bug reuses existing bugs phase and increments ID."""
@@ -136,13 +133,19 @@ class TestBugCommand:
         # Should still work, defaulting to 1 for the new task
         assert bugs["tasks"][2]["id"] == "99.1.1"
 
-    def test_cmd_bug_task_not_found(self, sample_plan_file, capsys):
-        """Test bug with non-existent task fails."""
-        args = Namespace(file=sample_plan_file, id="99.99.99")
-        with pytest.raises(SystemExit):
-            cli.cmd_bug(args)
+    def test_cmd_bug_creates_new_task_when_not_found(self, sample_plan_file, capsys):
+        """Test bug with non-existent task creates a new bug task."""
+        args = Namespace(file=sample_plan_file, id="Fix login validation bug")
+        cli.cmd_bug(args)
         captured = capsys.readouterr()
-        assert "not found" in captured.err
+        assert "Added" in captured.out
+        assert "Fix login validation bug" in captured.out
+
+        # Verify task was created in bugs phase
+        plan = json.loads(sample_plan_file.read_text())
+        bugs = next(p for p in plan["phases"] if p["id"] == "99")
+        new_task = next(t for t in bugs["tasks"] if t["title"] == "Fix login validation bug")
+        assert new_task["status"] == "pending"
 
     def test_cmd_bug_file_not_found(self, tmp_path, capsys):
         """Test bug with non-existent file fails."""

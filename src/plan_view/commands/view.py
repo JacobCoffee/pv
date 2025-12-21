@@ -21,6 +21,8 @@ View Commands:
   get, g ID           Show a specific task or phase by ID
   last, l [-a]        Show recently completed tasks (-a for all)
   summary, s          Show plan summary (pretty output, use --json for JSON)
+  bugs, b             Show bugs phase with all tasks
+  deferred, d         Show deferred phase with all tasks
   validate, v         Validate plan.json structure
 
 Edit Commands:
@@ -32,7 +34,8 @@ Edit Commands:
   start ID            Mark task as in_progress
   block ID            Mark task as blocked
   skip ID             Mark task as skipped
-  defer ID            Move task to deferred phase
+  defer ID|TITLE      Move task to deferred, or add new deferred task
+  bug ID|TITLE        Move task to bugs, or add new bug task
   rm TYPE ID          Remove a phase or task
 
 Options:
@@ -393,3 +396,53 @@ def cmd_validate(plan: dict, path: Path, *, as_json: bool = False) -> None:
                 json_path = ".".join(str(p) for p in e.absolute_path)
                 print(f"   Path: {json_path}")
         sys.exit(1)
+
+
+def _display_special_phase(plan: dict, phase_id: str, phase_name: str, *, as_json: bool = False) -> None:
+    """Display a special phase (bugs or deferred)."""
+    phase = find_phase(plan, phase_id)
+    if phase is None:
+        if as_json:
+            print("null")
+        else:
+            print(f"No {phase_name.lower()} phase found!")
+        return
+
+    if as_json:
+        print(json.dumps(phase, indent=2))
+        return
+
+    tasks = phase.get("tasks", [])
+    progress = phase.get("progress", {})
+    completed = progress.get("completed", 0)
+    total = progress.get("total", 0)
+
+    print(f"\n{bold_cyan(f'{phase_name} ({total} tasks)')}")
+    print(f"   {phase['description']}")
+    if total > 0:
+        print(f"   Completed: {completed}/{total}\n")
+    else:
+        print()
+
+    if not tasks:
+        print(f"   No {phase_name.lower()} tasks.\n")
+        return
+
+    for task in tasks:
+        icon = ICONS.get(task["status"], "❓")
+        task_id = task["id"]
+        task_title = task["title"]
+        agent = task.get("agent_type") or "general"
+        agent_str = f"({agent})" if task.get("agent_type") else ""
+        print(f"   {icon} [{task_id}] {task_title} {dim(agent_str)}")
+    print()
+
+
+def cmd_bugs(plan: dict, *, as_json: bool = False) -> None:
+    """Display bugs phase with all tasks."""
+    _display_special_phase(plan, "99", "Bugs", as_json=as_json)
+
+
+def cmd_deferred(plan: dict, *, as_json: bool = False) -> None:
+    """Display deferred phase with all tasks."""
+    _display_special_phase(plan, "deferred", "Deferred", as_json=as_json)
