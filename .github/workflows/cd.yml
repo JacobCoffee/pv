@@ -42,6 +42,7 @@ jobs:
       - name: Commit and push changelog
         env:
           TAG: ${{ inputs.tag || github.ref_name }}
+          GH_TOKEN: ${{ secrets.CHANGELOG_PAT }}
         run: |
           if git diff --quiet CHANGELOG.md; then
             echo "No changes to commit"
@@ -50,6 +51,9 @@ jobs:
 
           git config user.name 'github-actions[bot]'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
+
+          # Set remote with token for authentication
+          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
 
           git add CHANGELOG.md
           git commit -m "docs: regenerate changelog for ${TAG}"
