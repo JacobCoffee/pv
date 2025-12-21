@@ -7,6 +7,7 @@ from argparse import Namespace
 import pytest
 
 from plan_view import cli
+from plan_view.commands.edit import cmd_bug
 
 
 class TestBugCommand:
@@ -57,8 +58,6 @@ class TestBugCommand:
 
     def test_cmd_bug_creates_phase_if_missing(self, tmp_plan_path, capsys):
         """Test bug creates bugs phase if called with plan missing it."""
-        from plan_view.commands.edit import cmd_bug
-
         # Create a plan without the bugs phase (bypassing load_plan)
         plan = {
             "meta": {

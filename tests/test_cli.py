@@ -11,6 +11,8 @@ from unittest.mock import patch
 import pytest
 
 from plan_view import cli
+from plan_view.commands.edit import cmd_defer
+from plan_view.io import load_plan
 from plan_view.state import format_phase_suggestions, format_task_suggestions
 
 # ============ FORMATTING FUNCTIONS ============
@@ -446,8 +448,6 @@ class TestFileIO:
         tmp_plan_path.write_text(json.dumps(legacy_plan))
 
         # Load with auto_migrate=True
-        from plan_view.io import load_plan
-
         result = load_plan(tmp_plan_path, auto_migrate=True)
         assert result is not None
 
@@ -1288,8 +1288,6 @@ class TestEditCommands:
 
     def test_cmd_defer_creates_phase_if_missing(self, tmp_plan_path, capsys):
         """Test defer creates deferred phase if called with plan missing it."""
-        from plan_view.commands.edit import cmd_defer
-
         # Create a plan without the deferred phase (bypassing load_plan)
         plan = {
             "meta": {
