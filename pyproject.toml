@@ -1,5 +1,5 @@
 [project]
-name = "pv-tool"
+name = "plan-view"
 version = "0.2.0"
 description = "Pretty print plan.json for task tracking"
 readme = "README.md"
