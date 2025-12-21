@@ -160,6 +160,20 @@ def cmd_start(args: argparse.Namespace) -> None:
     cmd_set(args)
 
 
+def cmd_block(args: argparse.Namespace) -> None:
+    """Mark task as blocked."""
+    args.field = "status"
+    args.value = "blocked"
+    cmd_set(args)
+
+
+def cmd_skip(args: argparse.Namespace) -> None:
+    """Mark task as skipped."""
+    args.field = "status"
+    args.value = "skipped"
+    cmd_set(args)
+
+
 def cmd_rm(args: argparse.Namespace) -> None:
     """Remove a phase or task."""
     path = args.file

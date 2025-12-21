@@ -29,6 +29,8 @@ Edit Commands:
   set ID FIELD VALUE  Set a task field (status, agent, title)
   done ID             Mark task as completed
   start ID            Mark task as in_progress
+  block ID            Mark task as blocked
+  skip ID             Mark task as skipped
   rm TYPE ID          Remove a phase or task
 
 Options:

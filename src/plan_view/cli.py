@@ -7,10 +7,12 @@ from pathlib import Path
 from plan_view.commands.edit import (
     cmd_add_phase,
     cmd_add_task,
+    cmd_block,
     cmd_done,
     cmd_init,
     cmd_rm,
     cmd_set,
+    cmd_skip,
     cmd_start,
 )
 from plan_view.commands.view import (
@@ -98,6 +100,8 @@ __all__ = [
     "cmd_set",
     "cmd_done",
     "cmd_start",
+    "cmd_block",
+    "cmd_skip",
     "cmd_rm",
     # Entry point
     "main",
@@ -179,6 +183,12 @@ def main() -> None:
     start_p = subparsers.add_parser("start", add_help=False)
     start_p.add_argument("id")
 
+    block_p = subparsers.add_parser("block", add_help=False)
+    block_p.add_argument("id")
+
+    skip_p = subparsers.add_parser("skip", add_help=False)
+    skip_p.add_argument("id")
+
     # Remove
     rm_p = subparsers.add_parser("rm", add_help=False)
     rm_p.add_argument("type", choices=["phase", "task"])
@@ -210,6 +220,12 @@ def main() -> None:
             return
         case "start":
             cmd_start(args)
+            return
+        case "block":
+            cmd_block(args)
+            return
+        case "skip":
+            cmd_skip(args)
             return
         case "rm":
             cmd_rm(args)
