@@ -13,6 +13,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
   # ==================================================================================== #
@@ -26,8 +27,6 @@ jobs:
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           fetch-depth: 0
-          token: ${{ secrets.CHANGELOG_PAT || github.token }}
-          persist-credentials: true
 
       - name: Generate changelog
         uses: orhun/git-cliff-action@e16f179f0be49ecdfe63753837f20b9531642772 # v4.7.0
@@ -38,21 +37,27 @@ jobs:
           OUTPUT: CHANGELOG.md
           GITHUB_REPO: ${{ github.repository }}
 
-      - name: Commit and push changelog
+      - name: Create changelog PR
         env:
           TAG: ${{ inputs.tag || github.ref_name }}
-          GH_TOKEN: ${{ secrets.CHANGELOG_PAT || github.token }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           if git diff --quiet CHANGELOG.md; then
             echo "No changes to commit"
             exit 0
           fi
 
-          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
-          git checkout main
+          BRANCH="changelog/${TAG}"
           git config user.name 'github-actions[bot]'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
 
+          git checkout -b "${BRANCH}"
           git add CHANGELOG.md
           git commit -m "docs: regenerate changelog for ${TAG}"
-          git push origin main
+          git push origin "${BRANCH}"
+
+          gh pr create \
+            --title "docs: update changelog for ${TAG}" \
+            --body "Auto-generated changelog update for ${TAG}" \
+            --base main \
+            --head "${BRANCH}"
