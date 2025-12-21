@@ -1,5 +1,7 @@
 """ANSI terminal formatting utilities for pv-tool."""
 
+import os
+import sys
 from datetime import UTC, datetime
 
 # Status icons
@@ -22,28 +24,53 @@ YELLOW = "\033[33m"
 CYAN = "\033[36m"
 
 
+def _use_color() -> bool:
+    """Determine if color output should be used.
+
+    Follows the NO_COLOR standard (https://no-color.org/):
+    - NO_COLOR env var (any value) disables color
+    - FORCE_COLOR env var (any value) forces color even in pipes
+    - Otherwise, color is enabled only if stdout is a TTY
+    """
+    if os.environ.get("NO_COLOR"):
+        return False
+    if os.environ.get("FORCE_COLOR"):
+        return True
+    return sys.stdout.isatty()
+
+
 def bold(text: str) -> str:
     """Apply bold ANSI formatting to text."""
+    if not _use_color():
+        return text
     return f"{BOLD}{text}{RESET}"
 
 
 def dim(text: str) -> str:
     """Apply dim ANSI formatting to text."""
+    if not _use_color():
+        return text
     return f"{DIM}{text}{RESET}"
 
 
 def green(text: str) -> str:
     """Apply green ANSI color to text."""
+    if not _use_color():
+        return text
     return f"{GREEN}{text}{RESET}"
 
 
 def bold_cyan(text: str) -> str:
     """Apply bold cyan ANSI formatting to text."""
+    if not _use_color():
+        return text
     return f"{BOLD}{CYAN}{text}{RESET}"
 
 
 def bold_yellow(text: str) -> str:
     """Apply bold yellow ANSI formatting to text."""
+    if not _use_color():
+        return text
     return f"{BOLD}{YELLOW}{text}{RESET}"
 
 

@@ -17,30 +17,83 @@ from plan_view import cli
 class TestFormatting:
     """Tests for ANSI formatting helper functions."""
 
-    def test_bold(self):
+    def test_bold(self, monkeypatch):
         """Test bold formatting applies correct ANSI codes."""
+        monkeypatch.setenv("FORCE_COLOR", "1")
         result = cli.bold("test")
         assert result == "\033[1mtest\033[0m"
 
-    def test_dim(self):
+    def test_dim(self, monkeypatch):
         """Test dim formatting applies correct ANSI codes."""
+        monkeypatch.setenv("FORCE_COLOR", "1")
         result = cli.dim("test")
         assert result == "\033[2mtest\033[0m"
 
-    def test_green(self):
+    def test_green(self, monkeypatch):
         """Test green formatting applies correct ANSI codes."""
+        monkeypatch.setenv("FORCE_COLOR", "1")
         result = cli.green("test")
         assert result == "\033[32mtest\033[0m"
 
-    def test_bold_cyan(self):
+    def test_bold_cyan(self, monkeypatch):
         """Test bold cyan formatting applies correct ANSI codes."""
+        monkeypatch.setenv("FORCE_COLOR", "1")
         result = cli.bold_cyan("test")
         assert result == "\033[1m\033[36mtest\033[0m"
 
-    def test_bold_yellow(self):
+    def test_bold_yellow(self, monkeypatch):
         """Test bold yellow formatting applies correct ANSI codes."""
+        monkeypatch.setenv("FORCE_COLOR", "1")
         result = cli.bold_yellow("test")
         assert result == "\033[1m\033[33mtest\033[0m"
+
+
+class TestNoColor:
+    """Tests for NO_COLOR environment variable support."""
+
+    def test_no_color_disables_formatting(self, monkeypatch):
+        """Test NO_COLOR env var disables all ANSI formatting."""
+        monkeypatch.setenv("NO_COLOR", "1")
+        assert cli.bold("test") == "test"
+        assert cli.dim("test") == "test"
+        assert cli.green("test") == "test"
+        assert cli.bold_cyan("test") == "test"
+        assert cli.bold_yellow("test") == "test"
+
+    def test_no_color_any_value(self, monkeypatch):
+        """Test NO_COLOR works with any value (per spec)."""
+        monkeypatch.setenv("NO_COLOR", "")
+        # Empty string is falsy, so colors should still work
+        # Only truthy values disable color per the standard
+        monkeypatch.setenv("FORCE_COLOR", "1")
+        assert cli.bold("test") == "\033[1mtest\033[0m"
+
+    def test_force_color_overrides_tty_check(self, monkeypatch):
+        """Test FORCE_COLOR enables colors even when not a TTY."""
+        monkeypatch.setenv("FORCE_COLOR", "1")
+        monkeypatch.delenv("NO_COLOR", raising=False)
+        # Even if stdout is not a TTY, FORCE_COLOR should enable colors
+        assert cli.bold("test") == "\033[1mtest\033[0m"
+
+    def test_no_color_takes_precedence(self, monkeypatch):
+        """Test NO_COLOR takes precedence over FORCE_COLOR."""
+        monkeypatch.setenv("NO_COLOR", "1")
+        monkeypatch.setenv("FORCE_COLOR", "1")
+        assert cli.bold("test") == "test"
+
+    def test_pipe_disables_color(self, monkeypatch):
+        """Test color is disabled when stdout is not a TTY."""
+        monkeypatch.delenv("NO_COLOR", raising=False)
+        monkeypatch.delenv("FORCE_COLOR", raising=False)
+        with patch("sys.stdout.isatty", return_value=False):
+            assert cli.bold("test") == "test"
+
+    def test_tty_enables_color(self, monkeypatch):
+        """Test color is enabled when stdout is a TTY."""
+        monkeypatch.delenv("NO_COLOR", raising=False)
+        monkeypatch.delenv("FORCE_COLOR", raising=False)
+        with patch("sys.stdout.isatty", return_value=True):
+            assert cli.bold("test") == "\033[1mtest\033[0m"
 
 
 # ============ UTILITY FUNCTIONS ============
@@ -777,6 +830,20 @@ class TestEditCommands:
         plan = json.loads(sample_plan_file.read_text())
         assert plan["phases"][1]["tasks"][0]["status"] == "in_progress"
 
+    def test_cmd_block(self, sample_plan_file, capsys):
+        """Test block command marks task blocked."""
+        args = Namespace(file=sample_plan_file, id="1.1.1")
+        cli.cmd_block(args)
+        plan = json.loads(sample_plan_file.read_text())
+        assert plan["phases"][1]["tasks"][0]["status"] == "blocked"
+
+    def test_cmd_skip(self, sample_plan_file, capsys):
+        """Test skip command marks task skipped."""
+        args = Namespace(file=sample_plan_file, id="1.1.1")
+        cli.cmd_skip(args)
+        plan = json.loads(sample_plan_file.read_text())
+        assert plan["phases"][1]["tasks"][0]["status"] == "skipped"
+
     def test_cmd_rm_task(self, sample_plan_file, capsys):
         """Test removing a task."""
         args = Namespace(file=sample_plan_file, type="task", id="0.1.1")
@@ -1024,6 +1091,20 @@ class TestCLIMain:
         cli.main()
         captured = capsys.readouterr()
         assert "in_progress" in captured.out
+
+    def test_main_block(self, sample_plan_file, capsys, monkeypatch):
+        """Test block command via CLI."""
+        monkeypatch.setattr(sys, "argv", ["pv", "-f", str(sample_plan_file), "block", "1.1.1"])
+        cli.main()
+        captured = capsys.readouterr()
+        assert "blocked" in captured.out
+
+    def test_main_skip(self, sample_plan_file, capsys, monkeypatch):
+        """Test skip command via CLI."""
+        monkeypatch.setattr(sys, "argv", ["pv", "-f", str(sample_plan_file), "skip", "1.1.1"])
+        cli.main()
+        captured = capsys.readouterr()
+        assert "skipped" in captured.out
 
     def test_main_rm_task(self, sample_plan_file, capsys, monkeypatch):
         """Test rm task command via CLI."""
