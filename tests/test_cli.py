@@ -482,6 +482,21 @@ class TestFinding:
         result = cli.find_task(sample_plan, "99.99.99")
         assert result is None
 
+    def test_find_task_partial_match_unique(self, sample_plan):
+        """Test finding a task by unique prefix."""
+        # Add a task with unique prefix for testing
+        sample_plan["phases"][0]["tasks"].append({"id": "0.2.1", "title": "Unique Task", "status": "pending"})
+        result = cli.find_task(sample_plan, "0.2")
+        assert result is not None
+        _phase, task = result
+        assert task["id"] == "0.2.1"
+
+    def test_find_task_partial_match_ambiguous(self, sample_plan):
+        """Test partial match with multiple matches returns None."""
+        # "0.1" matches both "0.1.1" and "0.1.2"
+        result = cli.find_task(sample_plan, "0.1")
+        assert result is None
+
     def test_find_phase_exists(self, sample_plan):
         """Test finding an existing phase by ID."""
         phase = cli.find_phase(sample_plan, "0")

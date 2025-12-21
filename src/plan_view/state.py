@@ -64,12 +64,21 @@ def get_next_task(plan: dict) -> tuple[dict, dict] | None:
 
 
 def find_task(plan: dict, task_id: str) -> tuple[dict, dict] | None:
-    """Find a task by ID, return (phase, task) or None."""
+    """Find a task by ID (exact or prefix match), return (phase, task) or None."""
+    # Try exact match first
     for phase in plan.get("phases", []):
         for task in phase.get("tasks", []):
             if task["id"] == task_id:
                 return phase, task
-    return None
+
+    # Try prefix match - return if exactly one match
+    matches = [
+        (phase, task)
+        for phase in plan.get("phases", [])
+        for task in phase.get("tasks", [])
+        if task["id"].startswith(task_id)
+    ]
+    return matches[0] if len(matches) == 1 else None
 
 
 def find_phase(plan: dict, phase_id: str) -> dict | None:
