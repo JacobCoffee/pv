@@ -92,7 +92,7 @@ jobs:
         id: cliff
         with:
           config: pyproject.toml
-          args: --unreleased --strip header
+          args: --current --strip header
         env:
           GITHUB_REPO: ${{ github.repository }}
 
