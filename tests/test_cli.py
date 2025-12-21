@@ -48,6 +48,94 @@ class TestFormatting:
         assert result == "\033[1m\033[33mtest\033[0m"
 
 
+class TestQuietFlag:
+    """Tests for --quiet / -q flag on edit commands."""
+
+    def test_quiet_done(self, sample_plan_file, capsys):
+        """Test --quiet suppresses done output."""
+        args = Namespace(file=sample_plan_file, id="0.1.2", quiet=True)
+        cli.cmd_done(args)
+        captured = capsys.readouterr()
+        assert captured.out == ""
+
+    def test_quiet_start(self, sample_plan_file, capsys):
+        """Test --quiet suppresses start output."""
+        args = Namespace(file=sample_plan_file, id="1.1.1", quiet=True)
+        cli.cmd_start(args)
+        captured = capsys.readouterr()
+        assert captured.out == ""
+
+    def test_quiet_block(self, sample_plan_file, capsys):
+        """Test --quiet suppresses block output."""
+        args = Namespace(file=sample_plan_file, id="1.1.1", quiet=True)
+        cli.cmd_block(args)
+        captured = capsys.readouterr()
+        assert captured.out == ""
+
+    def test_quiet_skip(self, sample_plan_file, capsys):
+        """Test --quiet suppresses skip output."""
+        args = Namespace(file=sample_plan_file, id="1.1.1", quiet=True)
+        cli.cmd_skip(args)
+        captured = capsys.readouterr()
+        assert captured.out == ""
+
+    def test_quiet_defer(self, sample_plan_file, capsys):
+        """Test --quiet suppresses defer output."""
+        args = Namespace(file=sample_plan_file, id="1.1.1", quiet=True)
+        cli.cmd_defer(args)
+        captured = capsys.readouterr()
+        assert captured.out == ""
+
+    def test_quiet_rm_task(self, sample_plan_file, capsys):
+        """Test --quiet suppresses rm task output."""
+        args = Namespace(file=sample_plan_file, type="task", id="0.1.1", quiet=True)
+        cli.cmd_rm(args)
+        captured = capsys.readouterr()
+        assert captured.out == ""
+
+    def test_quiet_rm_phase(self, sample_plan_file, capsys):
+        """Test --quiet suppresses rm phase output."""
+        args = Namespace(file=sample_plan_file, type="phase", id="1", quiet=True)
+        cli.cmd_rm(args)
+        captured = capsys.readouterr()
+        assert captured.out == ""
+
+    def test_quiet_init(self, tmp_path, capsys):
+        """Test --quiet suppresses init output."""
+        args = Namespace(file=tmp_path / "plan.json", name="Test", force=False, quiet=True)
+        cli.cmd_init(args)
+        captured = capsys.readouterr()
+        assert captured.out == ""
+
+    def test_quiet_add_phase(self, sample_plan_file, capsys):
+        """Test --quiet suppresses add-phase output."""
+        args = Namespace(file=sample_plan_file, name="New Phase", desc=None, quiet=True)
+        cli.cmd_add_phase(args)
+        captured = capsys.readouterr()
+        assert captured.out == ""
+
+    def test_quiet_add_task(self, sample_plan_file, capsys):
+        """Test --quiet suppresses add-task output."""
+        args = Namespace(file=sample_plan_file, phase="0", title="New Task", agent=None, deps=None, quiet=True)
+        cli.cmd_add_task(args)
+        captured = capsys.readouterr()
+        assert captured.out == ""
+
+    def test_quiet_set(self, sample_plan_file, capsys):
+        """Test --quiet suppresses set output."""
+        args = Namespace(file=sample_plan_file, id="0.1.1", field="title", value="New Title", quiet=True)
+        cli.cmd_set(args)
+        captured = capsys.readouterr()
+        assert captured.out == ""
+
+    def test_quiet_via_cli(self, sample_plan_file, capsys, monkeypatch):
+        """Test -q flag via CLI."""
+        monkeypatch.setattr(sys, "argv", ["pv", "-f", str(sample_plan_file), "done", "0.1.2", "-q"])
+        cli.main()
+        captured = capsys.readouterr()
+        assert captured.out == ""
+
+
 class TestNoColor:
     """Tests for NO_COLOR environment variable support."""
 

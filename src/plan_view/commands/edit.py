@@ -1,6 +1,7 @@
 """Edit commands for modifying plan data."""
 
 import argparse
+import contextlib
 import sys
 
 from plan_view.formatting import VALID_STATUSES, now_iso
@@ -33,7 +34,8 @@ def cmd_init(args: argparse.Namespace) -> None:
     }
 
     save_plan(path, plan)
-    print(f"✅ Created {path} for '{args.name}'")
+    if not getattr(args, "quiet", False):
+        print(f"✅ Created {path} for '{args.name}'")
 
 
 def cmd_add_phase(args: argparse.Namespace) -> None:
@@ -59,7 +61,8 @@ def cmd_add_phase(args: argparse.Namespace) -> None:
 
     plan["phases"].append(phase)
     save_plan(path, plan)
-    print(f"✅ Added Phase {next_id}: {args.name}")
+    if not getattr(args, "quiet", False):
+        print(f"✅ Added Phase {next_id}: {args.name}")
 
 
 def cmd_add_task(args: argparse.Namespace) -> None:
@@ -106,7 +109,8 @@ def cmd_add_task(args: argparse.Namespace) -> None:
 
     phase["tasks"].append(task)
     save_plan(path, plan)
-    print(f"✅ Added [{next_id}] {args.title}")
+    if not getattr(args, "quiet", False):
+        print(f"✅ Added [{next_id}] {args.title}")
 
 
 def cmd_set(args: argparse.Namespace) -> None:
@@ -143,7 +147,8 @@ def cmd_set(args: argparse.Namespace) -> None:
         sys.exit(1)
 
     save_plan(path, plan)
-    print(f"✅ [{args.id}] {args.field} → {args.value}")
+    if not getattr(args, "quiet", False):
+        print(f"✅ [{args.id}] {args.field} → {args.value}")
 
 
 def cmd_done(args: argparse.Namespace) -> None:
@@ -209,21 +214,24 @@ def cmd_defer(args: argparse.Namespace) -> None:
 
     # Generate new ID for deferred phase
     existing_tasks = deferred.get("tasks", [])
+    assert isinstance(existing_tasks, list)
     max_task = 0
     for t in existing_tasks:
-        parts = t["id"].split(".")
+        assert isinstance(t, dict)
+        parts = str(t["id"]).split(".")
         if len(parts) >= 3:
-            try:
+            with contextlib.suppress(ValueError):
                 max_task = max(max_task, int(parts[2]))
-            except ValueError:
-                pass
     new_id = f"deferred.1.{max_task + 1}"
     task["id"] = new_id
 
     # Add to deferred phase
-    deferred["tasks"].append(task)
+    task_list = deferred["tasks"]
+    assert isinstance(task_list, list)
+    task_list.append(task)
     save_plan(path, plan)
-    print(f"✅ [{old_id}] → [{new_id}] (deferred)")
+    if not getattr(args, "quiet", False):
+        print(f"✅ [{old_id}] → [{new_id}] (deferred)")
 
 
 def cmd_rm(args: argparse.Namespace) -> None:
@@ -243,7 +251,8 @@ def cmd_rm(args: argparse.Namespace) -> None:
         phase, task = result
         phase["tasks"].remove(task)
         save_plan(path, plan)
-        print(f"✅ Removed task [{args.id}]")
+        if not getattr(args, "quiet", False):
+            print(f"✅ Removed task [{args.id}]")
 
     else:  # args.type == "phase" (argparse enforces this)
         phase = find_phase(plan, args.id)
@@ -253,4 +262,5 @@ def cmd_rm(args: argparse.Namespace) -> None:
         assert phase is not None
         plan["phases"].remove(phase)
         save_plan(path, plan)
-        print(f"✅ Removed phase {args.id}")
+        if not getattr(args, "quiet", False):
+            print(f"✅ Removed phase {args.id}")

@@ -159,11 +159,13 @@ def main() -> None:
     init_p = subparsers.add_parser("init", add_help=False)
     init_p.add_argument("name")
     init_p.add_argument("--force", action="store_true")
+    init_p.add_argument("-q", "--quiet", action="store_true")
 
     # Add phase
     add_phase_p = subparsers.add_parser("add-phase", add_help=False)
     add_phase_p.add_argument("name")
     add_phase_p.add_argument("--desc")
+    add_phase_p.add_argument("-q", "--quiet", action="store_true")
 
     # Add task
     add_task_p = subparsers.add_parser("add-task", add_help=False)
@@ -171,33 +173,41 @@ def main() -> None:
     add_task_p.add_argument("title")
     add_task_p.add_argument("--agent")
     add_task_p.add_argument("--deps")
+    add_task_p.add_argument("-q", "--quiet", action="store_true")
 
     # Set field
     set_p = subparsers.add_parser("set", add_help=False)
     set_p.add_argument("id")
     set_p.add_argument("field")
     set_p.add_argument("value")
+    set_p.add_argument("-q", "--quiet", action="store_true")
 
     # Shortcuts
     done_p = subparsers.add_parser("done", add_help=False)
     done_p.add_argument("id")
+    done_p.add_argument("-q", "--quiet", action="store_true")
 
     start_p = subparsers.add_parser("start", add_help=False)
     start_p.add_argument("id")
+    start_p.add_argument("-q", "--quiet", action="store_true")
 
     block_p = subparsers.add_parser("block", add_help=False)
     block_p.add_argument("id")
+    block_p.add_argument("-q", "--quiet", action="store_true")
 
     skip_p = subparsers.add_parser("skip", add_help=False)
     skip_p.add_argument("id")
+    skip_p.add_argument("-q", "--quiet", action="store_true")
 
     defer_p = subparsers.add_parser("defer", add_help=False)
     defer_p.add_argument("id")
+    defer_p.add_argument("-q", "--quiet", action="store_true")
 
     # Remove
     rm_p = subparsers.add_parser("rm", add_help=False)
     rm_p.add_argument("type", choices=["phase", "task"])
     rm_p.add_argument("id")
+    rm_p.add_argument("-q", "--quiet", action="store_true")
 
     args = parser.parse_args()
 
