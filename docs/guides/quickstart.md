@@ -4,17 +4,25 @@ Get started with pv in under a minute.
 
 ## Installation
 
-Install pv globally using uv:
-
+`````{tab-set}
+````{tab-item} uv (recommended)
 ```bash
 uv tool install plan-view
 ```
+````
 
-Or install from PyPI:
-
+````{tab-item} pip
 ```bash
 pip install plan-view
 ```
+````
+
+````{tab-item} pipx
+```bash
+pipx install plan-view
+```
+````
+`````
 
 ## Create a Plan
 
