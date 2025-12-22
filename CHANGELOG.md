@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.0](https://github.com/JacobCoffee/pv/compare/v1.2.0..v1.3.0) - 2025-12-22
+
+
+### Features
+
+
+- add future command to show upcoming tasks - ([2bd62d6](https://github.com/JacobCoffee/pv/commit/2bd62d6fb37b6f4d3304fb98ee64167d81a65346)) - Jacob Coffee
 ## [1.2.0](https://github.com/JacobCoffee/pv/compare/v1.1.2..v1.2.0) - 2025-12-22
 
 
@@ -28,7 +35,7 @@ All notable changes to this project will be documented in this file.
 
 - bump version to 1.1.3 - ([c88f774](https://github.com/JacobCoffee/pv/commit/c88f774b2dac9acd55a082047526d6b651fb2e5d)) - Jacob Coffee
 
-- bump version to 1.2.0 - ([596aa37](https://github.com/JacobCoffee/pv/commit/596aa37944bb3b6bd34eee114b25148983df372a)) - Jacob Coffee
+- bump version to 1.2.0 - ([dbca1a0](https://github.com/JacobCoffee/pv/commit/dbca1a0c91cb4d4ce2a9c4d58f0951915d7d9837)) - Jacob Coffee
 ## [1.1.2](https://github.com/JacobCoffee/pv/compare/v1.1.1..v1.1.2) - 2025-12-21
 
 

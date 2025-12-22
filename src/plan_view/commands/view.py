@@ -8,7 +8,14 @@ import jsonschema
 
 from plan_view.formatting import ICONS, bold, bold_cyan, bold_yellow, dim, green
 from plan_view.io import load_schema
-from plan_view.state import find_phase, find_task, get_current_phase, get_next_task, task_to_dict
+from plan_view.state import (
+    SPECIAL_PHASE_IDS,
+    find_phase,
+    find_task,
+    get_current_phase,
+    get_next_task,
+    task_to_dict,
+)
 
 HELP_TEXT = """\
 View and edit plan.json for task tracking
@@ -342,8 +349,6 @@ def cmd_last(plan: dict, count: int | None = 5, *, as_json: bool = False) -> Non
 
 def cmd_future(plan: dict, count: int | None = 5, *, as_json: bool = False) -> None:
     """Display upcoming tasks (pending/in_progress), actionable first."""
-    from plan_view.state import SPECIAL_PHASE_IDS
-
     # Build task status lookup for dependency checks
     task_status = {t["id"]: t["status"] for p in plan.get("phases", []) for t in p.get("tasks", [])}
 
