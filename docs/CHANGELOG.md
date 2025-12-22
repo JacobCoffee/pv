@@ -2,13 +2,33 @@
 
 All notable changes to this project will be documented in this file.
 
-## [unreleased]
+## [1.2.0](https://github.com/JacobCoffee/pv/compare/v1.1.2..v1.2.0) - 2025-12-22
 
 
 ### Documentation
 
 
 - regenerate changelog for v1.1.2 - ([6725900](https://github.com/JacobCoffee/pv/commit/6725900737b12d03d1382a536df223bf16a0ab79)) - github-actions[bot]
+
+- regenerate changelog for v1.1.3 - ([e1683a5](https://github.com/JacobCoffee/pv/commit/e1683a5d67e35364946d1ad8e4dc59dafaac613e)) - github-actions[bot]
+
+- add live schema reference and reorganize API docs - ([136757c](https://github.com/JacobCoffee/pv/commit/136757c1edd5a2e1f4f390dc346213d5200b58c0)) - Jacob Coffee
+
+
+### Features
+
+
+- add compact command to backup and shrink completed tasks - ([a87c93f](https://github.com/JacobCoffee/pv/commit/a87c93fff1f93045489756a065e2566a1839a331)) - Jacob Coffee
+
+- add ideas command and defer reason field - ([ff3fece](https://github.com/JacobCoffee/pv/commit/ff3feceaefe48c2b88549e63f3cbada102e18331)) - Jacob Coffee
+
+
+### Miscellaneous Chores
+
+
+- bump version to 1.1.3 - ([c88f774](https://github.com/JacobCoffee/pv/commit/c88f774b2dac9acd55a082047526d6b651fb2e5d)) - Jacob Coffee
+
+- bump version to 1.2.0 - ([dbca1a0](https://github.com/JacobCoffee/pv/commit/dbca1a0c91cb4d4ce2a9c4d58f0951915d7d9837)) - Jacob Coffee
 ## [1.1.2](https://github.com/JacobCoffee/pv/compare/v1.1.1..v1.1.2) - 2025-12-21
 
 
