@@ -233,6 +233,11 @@ def cmd_defer(plan: dict, args: argparse.Namespace) -> None:
                 max_task = max(max_task, int(parts[2]))
     new_id = f"deferred.1.{max_task + 1}"
 
+    # Get defer reason if provided (only store non-empty strings)
+    defer_reason = getattr(args, "reason", None)
+    if defer_reason and not defer_reason.strip():
+        defer_reason = None
+
     # Try to find existing task to move
     result = find_task(plan, args.id)
     if result is not None:
@@ -241,6 +246,11 @@ def cmd_defer(plan: dict, args: argparse.Namespace) -> None:
         old_phase["tasks"].remove(task)
         old_id = task["id"]
         task["id"] = new_id
+        # Add defer reason to tracking if provided
+        if defer_reason:
+            tracking = task["tracking"]
+            assert isinstance(tracking, dict)
+            tracking["defer_reason"] = defer_reason
         task_list = deferred["tasks"]
         assert isinstance(task_list, list)
         task_list.append(task)
@@ -250,13 +260,16 @@ def cmd_defer(plan: dict, args: argparse.Namespace) -> None:
             print(f"{_prefix(args)} [{old_id}] → [{new_id}] (deferred)")
     else:
         # Create new deferred task with input as title
+        tracking: dict = {}
+        if defer_reason:
+            tracking["defer_reason"] = defer_reason
         task = {
             "id": new_id,
             "title": args.id,  # Use input as title
             "status": "pending",
             "agent_type": None,
             "depends_on": [],
-            "tracking": {},
+            "tracking": tracking,
         }
         task_list = deferred["tasks"]
         assert isinstance(task_list, list)
@@ -327,6 +340,68 @@ def cmd_bug(plan: dict, args: argparse.Namespace) -> None:
             save_plan(args.file, plan)
         if not getattr(args, "quiet", False):
             print(f"{_prefix(args)} Added [{new_id}] {args.id} (bug)")
+
+
+@require_plan
+def cmd_idea(plan: dict, args: argparse.Namespace) -> None:
+    """Move task to ideas phase, or create a new idea if input is not an existing task ID."""
+    # Find or create ideas phase
+    ideas = find_phase(plan, "ideas")
+    if ideas is None:
+        ideas = {
+            "id": "ideas",
+            "name": "Ideas",
+            "description": "Tasks stored as future ideas or concepts",
+            "status": "pending",
+            "progress": {"completed": 0, "total": 0, "percentage": 0},
+            "tasks": [],
+        }
+        plan["phases"].append(ideas)
+
+    # Generate next ID for ideas phase
+    existing_tasks = ideas.get("tasks", [])
+    assert isinstance(existing_tasks, list)
+    max_task = 0
+    for t in existing_tasks:
+        assert isinstance(t, dict)
+        parts = str(t["id"]).split(".")
+        if len(parts) >= 3:
+            with contextlib.suppress(ValueError):
+                max_task = max(max_task, int(parts[2]))
+    new_id = f"ideas.1.{max_task + 1}"
+
+    # Try to find existing task to move
+    result = find_task(plan, args.id)
+    if result is not None:
+        # Move existing task to ideas
+        old_phase, task = result
+        old_phase["tasks"].remove(task)
+        old_id = task["id"]
+        task["id"] = new_id
+        task_list = ideas["tasks"]
+        assert isinstance(task_list, list)
+        task_list.append(task)
+        if not _is_dry_run(args):
+            save_plan(args.file, plan)
+        if not getattr(args, "quiet", False):
+            print(f"{_prefix(args)} [{old_id}] → [{new_id}] (idea)")
+    else:
+        # Create new idea task with input as title
+        task = {
+            "id": new_id,
+            "title": args.id,  # Use input as title
+            "status": "pending",
+            "agent_type": None,
+            "depends_on": [],
+            "tracking": {},
+        }
+        task_list = ideas["tasks"]
+        assert isinstance(task_list, list)
+        task_list.append(task)
+        if not _is_dry_run(args):
+            save_plan(args.file, plan)
+        if not getattr(args, "quiet", False):
+            print(f"{_prefix(args)} Added [{new_id}] {args.id} (idea)")
 
 
 @require_plan

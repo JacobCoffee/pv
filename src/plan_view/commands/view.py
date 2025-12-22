@@ -23,6 +23,7 @@ View Commands:
   summary, s          Show plan summary (pretty output, use --json for JSON)
   bugs, b             Show bugs phase with all tasks
   deferred, d         Show deferred phase with all tasks
+  ideas, i            Show ideas phase with all tasks
   validate, v         Validate plan.json structure
 
 Edit Commands:
@@ -36,6 +37,7 @@ Edit Commands:
   skip ID             Mark task as skipped
   defer ID|TITLE      Move task to deferred, or add new deferred task
   bug ID|TITLE        Move task to bugs, or add new bug task
+  idea ID|TITLE       Move task to ideas, or add new idea task
   rm TYPE ID          Remove a phase or task
 
 Options:
@@ -245,6 +247,8 @@ def cmd_get(plan: dict, task_id: str, *, as_json: bool = False) -> None:
             print(f"  {dim('Started:')} {tracking['started_at'][:10]}")
         if tracking.get("completed_at"):
             print(f"  {dim('Completed:')} {tracking['completed_at'][:10]}")
+        if tracking.get("defer_reason"):
+            print(f"  {dim('Defer reason:')} {tracking['defer_reason']}")
         print()
         return
 
@@ -435,6 +439,12 @@ def _display_special_phase(plan: dict, phase_id: str, phase_name: str, *, as_jso
         agent = task.get("agent_type") or "general"
         agent_str = f"({agent})" if task.get("agent_type") else ""
         print(f"   {icon} [{task_id}] {task_title} {dim(agent_str)}")
+
+        # Display defer reason if this is a deferred phase and reason exists
+        if phase_id == "deferred":
+            defer_reason = task.get("tracking", {}).get("defer_reason")
+            if defer_reason:
+                print(f"      {dim(f'Reason: {defer_reason}')}")
     print()
 
 
@@ -446,3 +456,8 @@ def cmd_bugs(plan: dict, *, as_json: bool = False) -> None:
 def cmd_deferred(plan: dict, *, as_json: bool = False) -> None:
     """Display deferred phase with all tasks."""
     _display_special_phase(plan, "deferred", "Deferred", as_json=as_json)
+
+
+def cmd_ideas(plan: dict, *, as_json: bool = False) -> None:
+    """Display ideas phase with all tasks."""
+    _display_special_phase(plan, "ideas", "Ideas", as_json=as_json)

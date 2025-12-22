@@ -12,6 +12,7 @@ from plan_view.commands.edit import (
     cmd_compact,
     cmd_defer,
     cmd_done,
+    cmd_idea,
     cmd_init,
     cmd_rm,
     cmd_set,
@@ -24,6 +25,7 @@ from plan_view.commands.view import (
     cmd_current,
     cmd_deferred,
     cmd_get,
+    cmd_ideas,
     cmd_last,
     cmd_next,
     cmd_overview,
@@ -99,6 +101,7 @@ __all__ = [
     "cmd_summary",
     "cmd_bugs",
     "cmd_deferred",
+    "cmd_ideas",
     "cmd_validate",
     # Edit Commands
     "cmd_init",
@@ -111,6 +114,7 @@ __all__ = [
     "cmd_skip",
     "cmd_defer",
     "cmd_bug",
+    "cmd_idea",
     "cmd_rm",
     "cmd_compact",
     # Entry point
@@ -171,6 +175,9 @@ def main() -> None:
     deferred_p = subparsers.add_parser("deferred", aliases=["d"], add_help=False)
     deferred_p.add_argument("--json", action="store_true", default=None)
 
+    ideas_p = subparsers.add_parser("ideas", aliases=["i"], add_help=False)
+    ideas_p.add_argument("--json", action="store_true", default=None)
+
     subparsers.add_parser("help", aliases=["h"], add_help=False)
 
     # Init
@@ -227,6 +234,7 @@ def main() -> None:
 
     defer_p = subparsers.add_parser("defer", add_help=False)
     defer_p.add_argument("id")
+    defer_p.add_argument("-r", "--reason", help="Reason for deferring the task")
     defer_p.add_argument("-q", "--quiet", action="store_true")
     defer_p.add_argument("-d", "--dry-run", action="store_true")
 
@@ -234,6 +242,11 @@ def main() -> None:
     bug_p.add_argument("id")
     bug_p.add_argument("-q", "--quiet", action="store_true")
     bug_p.add_argument("-d", "--dry-run", action="store_true")
+
+    idea_p = subparsers.add_parser("idea", add_help=False)
+    idea_p.add_argument("id")
+    idea_p.add_argument("-q", "--quiet", action="store_true")
+    idea_p.add_argument("-d", "--dry-run", action="store_true")
 
     # Remove
     rm_p = subparsers.add_parser("rm", add_help=False)
@@ -287,6 +300,9 @@ def main() -> None:
         case "bug":
             cmd_bug(args)
             return
+        case "idea":
+            cmd_idea(args)
+            return
         case "rm":
             cmd_rm(args)
             return
@@ -320,6 +336,8 @@ def main() -> None:
             cmd_bugs(plan, as_json=as_json)
         case "deferred" | "d":
             cmd_deferred(plan, as_json=as_json)
+        case "ideas" | "i":
+            cmd_ideas(plan, as_json=as_json)
         case "validate" | "v":
             cmd_validate(plan, args.file, as_json=as_json)
         case _:

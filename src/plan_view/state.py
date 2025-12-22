@@ -1,7 +1,7 @@
 """Plan state calculations and lookup operations."""
 
 # Special phases that are not part of regular workflow
-SPECIAL_PHASE_IDS = {"deferred", "99"}
+SPECIAL_PHASE_IDS = {"deferred", "99", "ideas"}
 
 
 def _is_special_phase(phase: dict) -> bool:
