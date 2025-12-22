@@ -24,6 +24,7 @@ from plan_view.commands.view import (
     cmd_bugs,
     cmd_current,
     cmd_deferred,
+    cmd_future,
     cmd_get,
     cmd_ideas,
     cmd_last,
@@ -98,6 +99,7 @@ __all__ = [
     "cmd_phase",
     "cmd_get",
     "cmd_last",
+    "cmd_future",
     "cmd_summary",
     "cmd_bugs",
     "cmd_deferred",
@@ -165,6 +167,11 @@ def main() -> None:
     last_p.add_argument("-n", "--count", type=int, default=5)
     last_p.add_argument("-a", "--all", action="store_true")
     last_p.add_argument("--json", action="store_true", default=None)
+
+    future_p = subparsers.add_parser("future", aliases=["f"], add_help=False)
+    future_p.add_argument("-n", "--count", type=int, default=5)
+    future_p.add_argument("-a", "--all", action="store_true")
+    future_p.add_argument("--json", action="store_true", default=None)
 
     summary_p = subparsers.add_parser("summary", aliases=["s"], add_help=False)
     summary_p.add_argument("--json", action="store_true", default=None)
@@ -330,6 +337,8 @@ def main() -> None:
             cmd_get(plan, args.id, as_json=as_json)
         case "last" | "l":
             cmd_last(plan, None if args.all else args.count, as_json=as_json)
+        case "future" | "f":
+            cmd_future(plan, None if args.all else args.count, as_json=as_json)
         case "summary" | "s":
             cmd_summary(plan, as_json=as_json)
         case "bugs" | "b":

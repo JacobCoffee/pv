@@ -20,6 +20,7 @@ View Commands:
   phase, p            Show current phase details
   get, g ID           Show a specific task or phase by ID
   last, l [-a]        Show recently completed tasks (-a for all)
+  future, f [-a]      Show upcoming tasks (-a for all)
   summary, s          Show plan summary (pretty output, use --json for JSON)
   bugs, b             Show bugs phase with all tasks
   deferred, d         Show deferred phase with all tasks
@@ -336,6 +337,84 @@ def cmd_last(plan: dict, count: int | None = 5, *, as_json: bool = False) -> Non
         time_str = completed_at[:10] if completed_at else "unknown"
         print(f"   ✅ [{task_id}] {task_title}")
         print(f"      {dim(f'{phase_name} · {time_str}')}")
+    print()
+
+
+def cmd_future(plan: dict, count: int | None = 5, *, as_json: bool = False) -> None:
+    """Display upcoming tasks (pending/in_progress), actionable first."""
+    from plan_view.state import SPECIAL_PHASE_IDS
+
+    # Build task status lookup for dependency checks
+    task_status = {t["id"]: t["status"] for p in plan.get("phases", []) for t in p.get("tasks", [])}
+
+    future_tasks: list[tuple[dict, dict, bool]] = []  # (phase, task, is_actionable)
+
+    for phase in plan.get("phases", []):
+        # Skip special phases
+        if phase["id"] in SPECIAL_PHASE_IDS:
+            continue
+        # Skip completed/skipped phases
+        if phase["status"] in ("completed", "skipped"):
+            continue
+
+        for task in phase.get("tasks", []):
+            if task["status"] in ("pending", "in_progress", "blocked"):
+                # Check if actionable (all deps completed)
+                deps = task.get("depends_on", [])
+                is_actionable = all(task_status.get(dep) == "completed" for dep in deps)
+                future_tasks.append((phase, task, is_actionable))
+
+    if not future_tasks:
+        if as_json:
+            print("[]")
+        else:
+            print("No upcoming tasks found!")
+        return
+
+    # Sort: in_progress first, then actionable pending, then blocked/waiting
+    def sort_key(item: tuple[dict, dict, bool]) -> tuple[int, int]:
+        _, task, is_actionable = item
+        status_order = {"in_progress": 0, "pending": 1, "blocked": 2}
+        return (status_order.get(task["status"], 3), 0 if is_actionable else 1)
+
+    future_tasks.sort(key=sort_key)
+
+    if as_json:
+        output = [
+            {
+                "id": task["id"],
+                "title": task["title"],
+                "status": task["status"],
+                "phase_id": phase["id"],
+                "phase_name": phase["name"],
+                "agent_type": task.get("agent_type"),
+                "actionable": is_actionable,
+                "depends_on": task.get("depends_on", []),
+            }
+            for phase, task, is_actionable in future_tasks[:count]
+        ]
+        print(json.dumps(output, indent=2))
+        return
+
+    print(f"\n{bold('Upcoming Tasks:')}\n")
+    for phase, task, is_actionable in future_tasks[:count]:
+        task_id = task["id"]
+        task_title = task["title"]
+        phase_name = phase["name"]
+        status = task["status"]
+
+        if status == "in_progress":
+            icon = "🔄"
+        elif status == "blocked":
+            icon = "🚫"
+        elif is_actionable:
+            icon = "👉"
+        else:
+            icon = "⏳"
+
+        print(f"   {icon} [{task_id}] {task_title}")
+        status_info = status if status != "pending" else ("ready" if is_actionable else "waiting")
+        print(f"      {dim(f'{phase_name} · {status_info}')}")
     print()
 
 
