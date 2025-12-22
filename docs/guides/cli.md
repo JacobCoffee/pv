@@ -107,6 +107,23 @@ pv last -a        # All completed
 pv l --json
 ```
 
+### Future (`f`, `future`)
+
+Show upcoming tasks (pending/in_progress/blocked), with actionable tasks first:
+
+```bash
+pv future         # Next 5 upcoming tasks
+pv future -n 10   # Next 10 upcoming tasks
+pv future -a      # All upcoming tasks
+pv f --json
+```
+
+Output shows tasks prioritized by:
+1. In-progress tasks (🔄)
+2. Actionable pending tasks - dependencies met (👉)
+3. Waiting pending tasks - dependencies not met (⏳)
+4. Blocked tasks (🚫)
+
 ### Summary (`s`, `summary`)
 
 Show plan progress summary:
@@ -147,6 +164,15 @@ Show the deferred phase:
 ```bash
 pv deferred
 pv d --json
+```
+
+### Ideas (`i`, `ideas`)
+
+Show the ideas phase:
+
+```bash
+pv ideas
+pv i --json
 ```
 
 ### Validate (`v`, `validate`)
@@ -259,9 +285,13 @@ pv skip 0.1.1
 Move a task to the deferred phase, or create a new deferred task:
 
 ```bash
-pv defer 0.1.1                  # Move existing task
-pv defer "Research caching"     # Create new deferred task
+pv defer 0.1.1                              # Move existing task
+pv defer "Research caching"                 # Create new deferred task
+pv defer 0.1.1 -r "Waiting for API docs"    # With reason
+pv defer 0.1.1 --reason "Low priority"      # Long form
 ```
+
+The reason is displayed in `pv deferred` and `pv get` output.
 
 ### Bug
 
@@ -270,6 +300,25 @@ Move a task to the bugs phase, or create a new bug:
 ```bash
 pv bug 0.1.1                    # Move existing task
 pv bug "Login fails on Safari"  # Create new bug
+```
+
+### Idea
+
+Move a task to the ideas phase, or create a new idea:
+
+```bash
+pv idea 0.1.1                   # Move existing task
+pv idea "Add dark mode toggle"  # Create new idea
+```
+
+### Compact
+
+Archive completed tasks to a backup file and shrink the plan:
+
+```bash
+pv compact                  # Create backup, remove completed tasks
+pv compact -n 10            # Keep max 10 backups
+pv compact --dry-run        # Preview what would be archived
 ```
 
 ### Remove (`rm`)

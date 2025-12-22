@@ -38,9 +38,11 @@ pv current
 | `pv phase` | Current phase details |
 | `pv get <id>` | Show task or phase by ID |
 | `pv last` | Recently completed tasks |
+| `pv future` | Upcoming tasks (actionable first) |
 | `pv summary` | Progress summary |
 | `pv bugs` | Show bugs phase |
 | `pv deferred` | Show deferred phase |
+| `pv ideas` | Show ideas phase |
 | `pv validate` | Validate against schema |
 
 ### Edit
@@ -54,11 +56,13 @@ pv current
 | `pv start <id>` | Mark in progress |
 | `pv block <id>` | Mark blocked |
 | `pv skip <id>` | Mark skipped |
-| `pv defer <id>` | Move to deferred |
+| `pv defer <id> [-r reason]` | Move to deferred (with optional reason) |
 | `pv bug <id>` | Move to bugs |
+| `pv idea <id>` | Move to ideas |
 | `pv set <id> <field> <value>` | Set task field |
 | `pv rm task <id>` | Remove task |
 | `pv rm phase <id>` | Remove phase |
+| `pv compact` | Archive completed tasks to backup |
 
 ### Options
 

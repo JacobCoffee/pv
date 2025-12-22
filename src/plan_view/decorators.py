@@ -24,11 +24,12 @@ def require_plan[**P, R](
     Returns:
         Wrapped function that takes (args: Namespace, ...) -> R
 
-    Example:
+    Example::
+
         @require_plan
         def cmd_add_task(plan: dict, args: argparse.Namespace) -> None:
             phase = find_phase(plan, args.phase)
-            # ... rest of implementation
+            ...
     """
 
     @wraps(func)
