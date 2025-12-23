@@ -2,7 +2,6 @@
 
 import json
 import sys
-from argparse import Namespace
 
 from plan_view import cli
 

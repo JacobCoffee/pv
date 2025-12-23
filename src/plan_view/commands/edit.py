@@ -131,6 +131,7 @@ def cmd_add_task(plan: dict, args: argparse.Namespace) -> None:
         "title": args.title,
         "status": "pending",
         "agent_type": args.agent,
+        "skill": getattr(args, "skill", None),
         "depends_on": args.deps.split(",") if args.deps else [],
         "tracking": {},
     }
@@ -165,10 +166,12 @@ def cmd_set(plan: dict, args: argparse.Namespace) -> None:
             task["tracking"]["completed_at"] = now_iso()
     elif args.field == "agent":
         task["agent_type"] = args.value if args.value != "none" else None
+    elif args.field == "skill":
+        task["skill"] = args.value if args.value != "none" else None
     elif args.field == "title":
         task["title"] = args.value
     else:
-        print(f"Error: Unknown field '{args.field}'. Use: status, agent, title", file=sys.stderr)
+        print(f"Error: Unknown field '{args.field}'. Use: status, agent, skill, title", file=sys.stderr)
         sys.exit(1)
 
     if not _is_dry_run(args):
@@ -268,6 +271,7 @@ def cmd_defer(plan: dict, args: argparse.Namespace) -> None:
             "title": args.id,  # Use input as title
             "status": "pending",
             "agent_type": None,
+            "skill": None,
             "depends_on": [],
             "tracking": tracking,
         }
@@ -330,6 +334,7 @@ def cmd_bug(plan: dict, args: argparse.Namespace) -> None:
             "title": args.id,  # Use input as title
             "status": "pending",
             "agent_type": None,
+            "skill": None,
             "depends_on": [],
             "tracking": {},
         }
@@ -392,6 +397,7 @@ def cmd_idea(plan: dict, args: argparse.Namespace) -> None:
             "title": args.id,  # Use input as title
             "status": "pending",
             "agent_type": None,
+            "skill": None,
             "depends_on": [],
             "tracking": {},
         }

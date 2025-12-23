@@ -37,8 +37,8 @@ View Commands:
 Edit Commands:
   init NAME           Create new plan.json
   add-phase NAME      Add a new phase
-  add-task PHASE TITLE  Add a new task to a phase
-  set ID FIELD VALUE  Set a task field (status, agent, title)
+  add-task PHASE TITLE  Add a new task to a phase (--agent, --skill)
+  set ID FIELD VALUE  Set a task field (status, agent, skill, title)
   done ID             Mark task as completed
   start ID            Mark task as in_progress
   block ID            Mark task as blocked
@@ -91,7 +91,9 @@ def cmd_overview(plan: dict, *, as_json: bool = False) -> None:
             task_id = task["id"]
             task_title = task["title"]
             agent = task.get("agent_type") or "general"
-            print(f"   {t_icon} [{task_id}] {task_title} {dim(f'({agent})')}")
+            skill = task.get("skill")
+            skill_str = f" [skill: {skill}]" if skill else ""
+            print(f"   {t_icon} [{task_id}] {task_title} {dim(f'({agent})')}{dim(skill_str)}")
         print()
 
 
@@ -143,7 +145,9 @@ def cmd_current(plan: dict, *, as_json: bool = False) -> None:
             task_id = task["id"]
             task_title = task["title"]
             agent = task.get("agent_type") or "general"
-            print(f"   {icon} [{task_id}] {task_title} {dim(f'({agent})')}")
+            skill = task.get("skill")
+            skill_str = f" [skill: {skill}]" if skill else ""
+            print(f"   {icon} [{task_id}] {task_title} {dim(f'({agent})')}{dim(skill_str)}")
 
     result = get_next_task(plan)
     if result:
@@ -172,6 +176,7 @@ def cmd_next(plan: dict, *, as_json: bool = False) -> None:
 
     icon = ICONS.get(task["status"], "❓")
     agent = task.get("agent_type") or "general-purpose"
+    skill = task.get("skill")
     task_id = task["id"]
     task_title = task["title"]
     phase_name = phase["name"]
@@ -180,6 +185,8 @@ def cmd_next(plan: dict, *, as_json: bool = False) -> None:
     print(f"  {icon} [{task_id}] {task_title}")
     print(f"  {dim('Phase:')} {phase_name}")
     print(f"  {dim('Agent:')} {agent}")
+    if skill:
+        print(f"  {dim('Skill:')} {skill}")
 
     deps = task.get("depends_on", [])
     if deps:
@@ -220,10 +227,12 @@ def cmd_phase(plan: dict, *, as_json: bool = False) -> None:
         task_title = task["title"]
         agent = task.get("agent_type") or "general"
         agent_str = f"({agent})" if task.get("agent_type") else ""
+        skill = task.get("skill")
+        skill_str = f" [skill: {skill}]" if skill else ""
         deps = task.get("depends_on", [])
         dep_str = f" [deps: {', '.join(deps)}]" if deps else ""
 
-        print(f"   {icon} [{task_id}] {task_title} {dim(agent_str)}{dim(dep_str)}")
+        print(f"   {icon} [{task_id}] {task_title} {dim(agent_str)}{dim(skill_str)}{dim(dep_str)}")
     print()
 
 
@@ -240,12 +249,15 @@ def cmd_get(plan: dict, task_id: str, *, as_json: bool = False) -> None:
 
         icon = ICONS.get(task["status"], "❓")
         agent = task.get("agent_type") or "general-purpose"
+        skill = task.get("skill")
         tracking = task.get("tracking", {})
 
         print(f"\n{bold(f'[{task_id}] {task["title"]}')}")
         print(f"  {dim('Status:')} {icon} {task['status']}")
         print(f"  {dim('Phase:')} {phase['name']}")
         print(f"  {dim('Agent:')} {agent}")
+        if skill:
+            print(f"  {dim('Skill:')} {skill}")
 
         deps = task.get("depends_on", [])
         if deps:
@@ -285,10 +297,12 @@ def cmd_get(plan: dict, task_id: str, *, as_json: bool = False) -> None:
             task_title = task["title"]
             agent = task.get("agent_type") or "general"
             agent_str = f"({agent})" if task.get("agent_type") else ""
+            skill = task.get("skill")
+            skill_str = f" [skill: {skill}]" if skill else ""
             deps = task.get("depends_on", [])
             dep_str = f" [deps: {', '.join(deps)}]" if deps else ""
 
-            print(f"   {icon} [{task_id_display}] {task_title} {dim(agent_str)}{dim(dep_str)}")
+            print(f"   {icon} [{task_id_display}] {task_title} {dim(agent_str)}{dim(skill_str)}{dim(dep_str)}")
         print()
         return
 
@@ -330,6 +344,7 @@ def cmd_last(plan: dict, count: int | None = 5, *, as_json: bool = False) -> Non
                 "phase_name": phase["name"],
                 "completed_at": completed_at,
                 "agent_type": task.get("agent_type"),
+                "skill": task.get("skill"),
             }
             for phase, task, completed_at in completed_tasks[:count]
         ]
@@ -393,6 +408,7 @@ def cmd_future(plan: dict, count: int | None = 5, *, as_json: bool = False) -> N
                 "phase_id": phase["id"],
                 "phase_name": phase["name"],
                 "agent_type": task.get("agent_type"),
+                "skill": task.get("skill"),
                 "actionable": is_actionable,
                 "depends_on": task.get("depends_on", []),
             }
@@ -522,7 +538,9 @@ def _display_special_phase(plan: dict, phase_id: str, phase_name: str, *, as_jso
         task_title = task["title"]
         agent = task.get("agent_type") or "general"
         agent_str = f"({agent})" if task.get("agent_type") else ""
-        print(f"   {icon} [{task_id}] {task_title} {dim(agent_str)}")
+        skill = task.get("skill")
+        skill_str = f" [skill: {skill}]" if skill else ""
+        print(f"   {icon} [{task_id}] {task_title} {dim(agent_str)}{dim(skill_str)}")
 
         # Display defer reason if this is a deferred phase and reason exists
         if phase_id == "deferred":

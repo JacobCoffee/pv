@@ -86,6 +86,13 @@
         {"type": "string", "minLength": 1}
       ]
     },
+    "skill": {
+      "description": "Optional skill to invoke for this task (e.g., 'frontend-design'). Skills provide specialized capabilities.",
+      "oneOf": [
+        {"type": "null"},
+        {"type": "string", "minLength": 1}
+      ]
+    },
     "business_plan_ref": {
       "type": ["object", "null"],
       "properties": {
@@ -139,6 +146,7 @@
         "priority": {"$ref": "#/definitions/priority"},
         "estimated_minutes": {"$ref": "#/definitions/estimated_minutes"},
         "agent_type": {"$ref": "#/definitions/agent_type"},
+        "skill": {"$ref": "#/definitions/skill"},
         "business_plan_ref": {"$ref": "#/definitions/business_plan_ref"},
         "depends_on": {
           "description": "Task IDs this task depends on (must be completed first)",

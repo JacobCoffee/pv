@@ -206,6 +206,7 @@ def main() -> None:
     add_task_p.add_argument("phase")
     add_task_p.add_argument("title")
     add_task_p.add_argument("--agent")
+    add_task_p.add_argument("--skill")
     add_task_p.add_argument("--deps")
     add_task_p.add_argument("-q", "--quiet", action="store_true")
     add_task_p.add_argument("-d", "--dry-run", action="store_true")

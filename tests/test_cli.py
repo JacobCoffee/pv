@@ -481,12 +481,30 @@ class TestFileIO:
                 },
                 "summary": {},
                 "phases": [
-                    {"id": "unknown-special", "name": "Unknown", "description": "Test",
-                     "status": "pending", "progress": {"completed": 0, "total": 0, "percentage": 0}, "tasks": []},
-                    {"id": "0", "name": "Phase 0", "description": "Test",
-                     "status": "pending", "progress": {"completed": 0, "total": 0, "percentage": 0}, "tasks": []},
-                    {"id": "deferred", "name": "Deferred", "description": "Test",
-                     "status": "pending", "progress": {"completed": 0, "total": 0, "percentage": 0}, "tasks": []},
+                    {
+                        "id": "unknown-special",
+                        "name": "Unknown",
+                        "description": "Test",
+                        "status": "pending",
+                        "progress": {"completed": 0, "total": 0, "percentage": 0},
+                        "tasks": [],
+                    },
+                    {
+                        "id": "0",
+                        "name": "Phase 0",
+                        "description": "Test",
+                        "status": "pending",
+                        "progress": {"completed": 0, "total": 0, "percentage": 0},
+                        "tasks": [],
+                    },
+                    {
+                        "id": "deferred",
+                        "name": "Deferred",
+                        "description": "Test",
+                        "status": "pending",
+                        "progress": {"completed": 0, "total": 0, "percentage": 0},
+                        "tasks": [],
+                    },
                 ],
             }
             tmp_plan_path.write_text(json.dumps(plan))
@@ -761,6 +779,43 @@ class TestViewCommands:
         captured = capsys.readouterr()
         assert "Depends on:" in captured.out
 
+    def test_cmd_next_with_skill(self, capsys):
+        """Test next command shows skill when present."""
+        plan_with_skill = {
+            "meta": {
+                "project": "Test",
+                "version": "1.0.0",
+                "created_at": "2025-01-01T00:00:00Z",
+                "updated_at": "2025-01-01T00:00:00Z",
+                "business_plan_path": ".claude/BUSINESS_PLAN.md",
+            },
+            "summary": {"total_phases": 1, "total_tasks": 1, "completed_tasks": 0, "overall_progress": 0},
+            "phases": [
+                {
+                    "id": "0",
+                    "name": "Test Phase",
+                    "description": "Test",
+                    "status": "in_progress",
+                    "progress": {"completed": 0, "total": 1, "percentage": 0},
+                    "tasks": [
+                        {
+                            "id": "0.1.1",
+                            "title": "Task with Skill",
+                            "status": "pending",
+                            "agent_type": "ui-engineer",
+                            "skill": "frontend-design",
+                            "depends_on": [],
+                            "tracking": {},
+                        },
+                    ],
+                },
+            ],
+        }
+        cli.cmd_next(plan_with_skill, as_json=False)
+        captured = capsys.readouterr()
+        assert "Skill:" in captured.out
+        assert "frontend-design" in captured.out
+
     def test_cmd_phase_text(self, sample_plan, capsys):
         """Test phase command text output."""
         cli.cmd_phase(sample_plan, as_json=False)
@@ -824,6 +879,43 @@ class TestViewCommands:
         cli.cmd_get(sample_plan, "0.1.2", as_json=False)
         captured = capsys.readouterr()
         assert "Started:" in captured.out
+
+    def test_cmd_get_with_skill(self, capsys):
+        """Test get command shows skill when present."""
+        plan_with_skill = {
+            "meta": {
+                "project": "Test",
+                "version": "1.0.0",
+                "created_at": "2025-01-01T00:00:00Z",
+                "updated_at": "2025-01-01T00:00:00Z",
+                "business_plan_path": ".claude/BUSINESS_PLAN.md",
+            },
+            "summary": {"total_phases": 1, "total_tasks": 1, "completed_tasks": 0, "overall_progress": 0},
+            "phases": [
+                {
+                    "id": "0",
+                    "name": "Test Phase",
+                    "description": "Test",
+                    "status": "in_progress",
+                    "progress": {"completed": 0, "total": 1, "percentage": 0},
+                    "tasks": [
+                        {
+                            "id": "0.1.1",
+                            "title": "Task with Skill",
+                            "status": "pending",
+                            "agent_type": "ui-engineer",
+                            "skill": "frontend-design",
+                            "depends_on": [],
+                            "tracking": {},
+                        },
+                    ],
+                },
+            ],
+        }
+        cli.cmd_get(plan_with_skill, "0.1.1", as_json=False)
+        captured = capsys.readouterr()
+        assert "Skill:" in captured.out
+        assert "frontend-design" in captured.out
 
     def test_cmd_get_phase_by_id_text(self, sample_plan, capsys):
         """Test get command with phase ID text output."""
@@ -1154,12 +1246,29 @@ class TestEditCommands:
             phase="0",
             title="Dependent Task",
             agent=None,
+            skill=None,
             deps="0.1.1,0.1.2",
         )
         cli.cmd_add_task(args)
         plan = json.loads(sample_plan_file.read_text())
         new_task = plan["phases"][0]["tasks"][-1]
         assert new_task["depends_on"] == ["0.1.1", "0.1.2"]
+
+    def test_cmd_add_task_with_skill(self, sample_plan_file, capsys):
+        """Test adding a task with a skill."""
+        args = Namespace(
+            file=sample_plan_file,
+            phase="0",
+            title="Frontend Task",
+            agent="ui-engineer",
+            skill="frontend-design",
+            deps=None,
+        )
+        cli.cmd_add_task(args)
+        plan = json.loads(sample_plan_file.read_text())
+        new_task = plan["phases"][0]["tasks"][-1]
+        assert new_task["skill"] == "frontend-design"
+        assert new_task["agent_type"] == "ui-engineer"
 
     def test_cmd_add_task_to_empty_phase(self, empty_plan_file, capsys):
         """Test adding first task to an empty phase."""
@@ -1248,6 +1357,24 @@ class TestEditCommands:
         cli.cmd_set(args)
         plan = json.loads(sample_plan_file.read_text())
         assert plan["phases"][0]["tasks"][0]["agent_type"] is None
+
+    def test_cmd_set_skill(self, sample_plan_file, capsys):
+        """Test setting task skill."""
+        args = Namespace(file=sample_plan_file, id="0.1.1", field="skill", value="frontend-design")
+        cli.cmd_set(args)
+        plan = json.loads(sample_plan_file.read_text())
+        assert plan["phases"][0]["tasks"][0]["skill"] == "frontend-design"
+
+    def test_cmd_set_skill_none(self, sample_plan_file, capsys):
+        """Test setting skill to none clears it."""
+        # First set a skill
+        args = Namespace(file=sample_plan_file, id="0.1.1", field="skill", value="frontend-design")
+        cli.cmd_set(args)
+        # Then clear it
+        args = Namespace(file=sample_plan_file, id="0.1.1", field="skill", value="none")
+        cli.cmd_set(args)
+        plan = json.loads(sample_plan_file.read_text())
+        assert plan["phases"][0]["tasks"][0]["skill"] is None
 
     def test_cmd_set_title(self, sample_plan_file, capsys):
         """Test setting task title."""
