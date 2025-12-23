@@ -164,6 +164,9 @@ def cmd_set(plan: dict, args: argparse.Namespace) -> None:
             task["tracking"]["started_at"] = now_iso()
         elif args.value == "completed":
             task["tracking"]["completed_at"] = now_iso()
+            # Cascade to subtasks
+            for subtask in task.get("subtasks", []):
+                subtask["status"] = "completed"
     elif args.field == "agent":
         task["agent_type"] = args.value if args.value != "none" else None
     elif args.field == "skill":
@@ -503,3 +506,68 @@ def cmd_compact(plan: dict, args: argparse.Namespace) -> None:
     if not getattr(args, "quiet", False):
         print(f"{_prefix(args)} Backed up to {backup_path}")
         print(f"{_prefix(args)} Compacted {compacted} completed task{'s' if compacted != 1 else ''}")
+
+
+@require_plan
+def cmd_reconcile(plan: dict, args: argparse.Namespace) -> None:
+    """Reconcile plan data: fix inconsistencies and validate."""
+    from plan_view.commands.view import cmd_validate
+
+    fixes = []
+
+    # 1. Cascade subtask status for completed tasks
+    for phase in plan["phases"]:
+        for task in phase["tasks"]:
+            if task["status"] == "completed":
+                for subtask in task.get("subtasks", []):
+                    if subtask["status"] != "completed":
+                        subtask["status"] = "completed"
+                        fixes.append(f"  Marked subtask {subtask['id']} as completed (parent {task['id']} is completed)")
+
+    # 2. Ensure completed tasks have completed_at timestamp
+    for phase in plan["phases"]:
+        for task in phase["tasks"]:
+            if task["status"] == "completed":
+                tracking = task.get("tracking", {})
+                if not tracking.get("completed_at"):
+                    task.setdefault("tracking", {})["completed_at"] = now_iso()
+                    fixes.append(f"  Added completed_at timestamp to task {task['id']}")
+
+    # 3. Ensure in_progress tasks have started_at timestamp
+    for phase in plan["phases"]:
+        for task in phase["tasks"]:
+            if task["status"] == "in_progress":
+                tracking = task.get("tracking", {})
+                if not tracking.get("started_at"):
+                    task.setdefault("tracking", {})["started_at"] = now_iso()
+                    fixes.append(f"  Added started_at timestamp to task {task['id']}")
+
+    # 4. Ensure all tasks have tracking and depends_on fields
+    for phase in plan["phases"]:
+        for task in phase["tasks"]:
+            if "tracking" not in task:
+                task["tracking"] = {}
+                fixes.append(f"  Added tracking field to task {task['id']}")
+            if "depends_on" not in task:
+                task["depends_on"] = []
+                fixes.append(f"  Added depends_on field to task {task['id']}")
+
+    # Report fixes
+    if not getattr(args, "quiet", False):
+        if fixes:
+            print(f"Reconciled {len(fixes)} issue{'s' if len(fixes) != 1 else ''}:")
+            for fix in fixes:
+                print(fix)
+        else:
+            print("No issues found.")
+
+    # Save if there were fixes
+    if fixes and not _is_dry_run(args):
+        save_plan(args.file, plan)
+        if not getattr(args, "quiet", False):
+            print(f"\nSaved changes to {args.file}")
+
+    # Run validation
+    if not getattr(args, "quiet", False):
+        print("\nValidating...")
+    cmd_validate(plan, args.file, as_json=getattr(args, "json", False))

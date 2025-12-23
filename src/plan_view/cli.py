@@ -4,6 +4,7 @@ import argparse
 import sys
 from pathlib import Path
 
+from plan_view.commands.dashboard import cmd_dashboard
 from plan_view.commands.edit import (
     cmd_add_phase,
     cmd_add_task,
@@ -14,6 +15,7 @@ from plan_view.commands.edit import (
     cmd_done,
     cmd_idea,
     cmd_init,
+    cmd_reconcile,
     cmd_rm,
     cmd_set,
     cmd_skip,
@@ -32,6 +34,7 @@ from plan_view.commands.view import (
     cmd_overview,
     cmd_phase,
     cmd_summary,
+    cmd_table,
     cmd_validate,
 )
 
@@ -101,6 +104,7 @@ __all__ = [
     "cmd_last",
     "cmd_future",
     "cmd_summary",
+    "cmd_table",
     "cmd_bugs",
     "cmd_deferred",
     "cmd_ideas",
@@ -175,6 +179,10 @@ def main() -> None:
 
     summary_p = subparsers.add_parser("summary", aliases=["s"], add_help=False)
     summary_p.add_argument("--json", action="store_true", default=None)
+
+    table_p = subparsers.add_parser("table", aliases=["t"], add_help=False)
+    table_p.add_argument("phase", nargs="?", default=None)
+    table_p.add_argument("--json", action="store_true", default=None)
 
     bugs_p = subparsers.add_parser("bugs", aliases=["b"], add_help=False)
     bugs_p.add_argument("--json", action="store_true", default=None)
@@ -269,6 +277,16 @@ def main() -> None:
     compact_p.add_argument("-q", "--quiet", action="store_true")
     compact_p.add_argument("-d", "--dry-run", action="store_true")
 
+    # Reconcile
+    reconcile_p = subparsers.add_parser("reconcile", add_help=False)
+    reconcile_p.add_argument("-q", "--quiet", action="store_true")
+    reconcile_p.add_argument("-d", "--dry-run", action="store_true")
+    reconcile_p.add_argument("--json", action="store_true", default=None)
+
+    # Dashboard
+    dashboard_p = subparsers.add_parser("dashboard", add_help=False)
+    dashboard_p.add_argument("-p", "--port", type=int)
+
     args = parser.parse_args()
 
     # Help command
@@ -317,6 +335,12 @@ def main() -> None:
         case "compact":
             cmd_compact(args)
             return
+        case "reconcile":
+            cmd_reconcile(args)
+            return
+        case "dashboard":
+            cmd_dashboard(args)
+            return
 
     # View commands need to load plan
     plan = load_plan(args.file)
@@ -342,6 +366,8 @@ def main() -> None:
             cmd_future(plan, None if args.all else args.count, as_json=as_json)
         case "summary" | "s":
             cmd_summary(plan, as_json=as_json)
+        case "table" | "t":
+            cmd_table(plan, args.phase, as_json=as_json)
         case "bugs" | "b":
             cmd_bugs(plan, as_json=as_json)
         case "deferred" | "d":

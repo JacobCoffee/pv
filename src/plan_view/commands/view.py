@@ -29,6 +29,7 @@ View Commands:
   last, l [-a]        Show recently completed tasks (-a for all)
   future, f [-a]      Show upcoming tasks (-a for all)
   summary, s          Show plan summary (pretty output, use --json for JSON)
+  table, t [PHASE]    Show tasks in table format (optional: filter by phase)
   bugs, b             Show bugs phase with all tasks
   deferred, d         Show deferred phase with all tasks
   ideas, i            Show ideas phase with all tasks
@@ -47,6 +48,11 @@ Edit Commands:
   bug ID|TITLE        Move task to bugs, or add new bug task
   idea ID|TITLE       Move task to ideas, or add new idea task
   rm TYPE ID          Remove a phase or task
+
+Utilities:
+  dashboard           Open interactive dashboard in browser
+  reconcile           Fix data inconsistencies and validate
+  compact             Remove tracking data from completed tasks
 
 Options:
   -f, --file FILE     Path to plan.json (default: ./plan.json)
@@ -563,3 +569,96 @@ def cmd_deferred(plan: dict, *, as_json: bool = False) -> None:
 def cmd_ideas(plan: dict, *, as_json: bool = False) -> None:
     """Display ideas phase with all tasks."""
     _display_special_phase(plan, "ideas", "Ideas", as_json=as_json)
+
+
+def cmd_table(plan: dict, phase_id: str | None = None, *, as_json: bool = False) -> None:
+    """Display plan or phase tasks in table format."""
+    # Collect tasks to display
+    tasks_data: list[tuple[dict, dict]] = []  # (phase, task)
+
+    if phase_id:
+        phase = find_phase(plan, phase_id)
+        if phase is None:
+            print(f"Phase '{phase_id}' not found!")
+            return
+        for task in phase.get("tasks", []):
+            tasks_data.append((phase, task))
+    else:
+        for phase in plan.get("phases", []):
+            for task in phase.get("tasks", []):
+                tasks_data.append((phase, task))
+
+    if not tasks_data:
+        if as_json:
+            print("[]")
+        else:
+            print("No tasks found!")
+        return
+
+    if as_json:
+        output = [
+            {
+                "id": task["id"],
+                "title": task["title"],
+                "status": task["status"],
+                "phase": phase["name"],
+                "agent": task.get("agent_type"),
+                "skill": task.get("skill"),
+            }
+            for phase, task in tasks_data
+        ]
+        print(json.dumps(output, indent=2))
+        return
+
+    # Calculate column widths
+    id_width = max(len(task["id"]) for _, task in tasks_data)
+    title_width = min(40, max(len(task["title"]) for _, task in tasks_data))
+    status_width = max(len(task["status"]) for _, task in tasks_data)
+    phase_width = min(15, max(len(phase["name"]) for phase, _ in tasks_data))
+    agent_width = max(
+        len(task.get("agent_type") or "-") for _, task in tasks_data
+    )
+    agent_width = min(20, max(5, agent_width))
+    skill_width = max(len(task.get("skill") or "-") for _, task in tasks_data)
+    skill_width = min(15, max(5, skill_width))
+
+    # Print header
+    header = (
+        f"{'ID':<{id_width}}  "
+        f"{'Title':<{title_width}}  "
+        f"{'Status':<{status_width}}  "
+        f"{'Phase':<{phase_width}}  "
+        f"{'Agent':<{agent_width}}  "
+        f"{'Skill':<{skill_width}}"
+    )
+    print(f"\n{bold(header)}")
+    print("─" * len(header))
+
+    # Print rows
+    for phase, task in tasks_data:
+        icon = ICONS.get(task["status"], "❓")
+        title = task["title"]
+        if len(title) > title_width:
+            title = title[: title_width - 2] + ".."
+        phase_name = phase["name"]
+        if len(phase_name) > phase_width:
+            phase_name = phase_name[: phase_width - 2] + ".."
+        agent = task.get("agent_type") or "-"
+        if len(agent) > agent_width:
+            agent = agent[: agent_width - 2] + ".."
+        skill = task.get("skill") or "-"
+        if len(skill) > skill_width:
+            skill = skill[: skill_width - 2] + ".."
+
+        row = (
+            f"{task['id']:<{id_width}}  "
+            f"{title:<{title_width}}  "
+            f"{icon} {task['status']:<{status_width - 2}}  "
+            f"{phase_name:<{phase_width}}  "
+            f"{agent:<{agent_width}}  "
+            f"{skill:<{skill_width}}"
+        )
+        print(row)
+
+    print()
+    print(f"{dim(f'Total: {len(tasks_data)} tasks')}")
