@@ -58,7 +58,7 @@ def cmd_init(args: argparse.Namespace) -> None:
                 "tasks": [],
             },
             {
-                "id": "99",
+                "id": "bugs",
                 "name": "Bugs",
                 "description": "Tasks identified as bugs requiring fixes",
                 "status": "pending",
@@ -284,10 +284,10 @@ def cmd_defer(plan: dict, args: argparse.Namespace) -> None:
 def cmd_bug(plan: dict, args: argparse.Namespace) -> None:
     """Move task to bugs phase, or create a new bug if input is not an existing task ID."""
     # Find or create bugs phase
-    bugs = find_phase(plan, "99")
+    bugs = find_phase(plan, "bugs")
     if bugs is None:
         bugs = {
-            "id": "99",
+            "id": "bugs",
             "name": "Bugs",
             "description": "Tasks identified as bugs requiring fixes",
             "status": "pending",
@@ -306,7 +306,7 @@ def cmd_bug(plan: dict, args: argparse.Namespace) -> None:
         if len(parts) >= 3:
             with contextlib.suppress(ValueError):
                 max_task = max(max_task, int(parts[2]))
-    new_id = f"99.1.{max_task + 1}"
+    new_id = f"bugs.1.{max_task + 1}"
 
     # Try to find existing task to move
     result = find_task(plan, args.id)

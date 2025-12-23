@@ -6,7 +6,34 @@ from importlib.resources import files
 from pathlib import Path
 
 from plan_view.formatting import now_iso
-from plan_view.state import recalculate_progress
+from plan_view.state import SPECIAL_PHASE_IDS, recalculate_progress
+
+# Order for special phases (always sorted last in this order)
+SPECIAL_PHASE_ORDER = ["bugs", "ideas", "deferred"]
+
+
+def _phase_sort_key(phase: dict) -> tuple[int, int | str]:
+    """Sort key for phases: numeric phases first (sorted), then special phases last."""
+    phase_id = phase["id"]
+    if phase_id in SPECIAL_PHASE_IDS:
+        # Special phases come after all numeric phases (group 1)
+        # Ordered by SPECIAL_PHASE_ORDER
+        try:
+            order = SPECIAL_PHASE_ORDER.index(phase_id)
+        except ValueError:
+            order = len(SPECIAL_PHASE_ORDER)  # Unknown special phases at end
+        return (1, order)
+    # Numeric phases come first (group 0), sorted by numeric value
+    try:
+        return (0, int(phase_id))
+    except ValueError:
+        # Non-numeric, non-special phases: treat as large number
+        return (0, 999999)
+
+
+def _sort_phases(plan: dict) -> None:
+    """Sort phases: numeric first (by number), special phases last."""
+    plan["phases"] = sorted(plan.get("phases", []), key=_phase_sort_key)
 
 
 def _ensure_special_phases(plan: dict) -> bool:
@@ -28,10 +55,10 @@ def _ensure_special_phases(plan: dict) -> bool:
         )
         modified = True
 
-    if "99" not in phase_ids:
+    if "bugs" not in phase_ids:
         phases.append(
             {
-                "id": "99",
+                "id": "bugs",
                 "name": "Bugs",
                 "description": "Tasks identified as bugs requiring fixes",
                 "status": "pending",
@@ -67,8 +94,9 @@ def load_plan(path: Path, *, auto_migrate: bool = False) -> dict | None:
 
 
 def save_plan(path: Path, plan: dict) -> None:
-    """Save plan.json with updated timestamp."""
+    """Save plan.json with updated timestamp and sorted phases."""
     plan["meta"]["updated_at"] = now_iso()
+    _sort_phases(plan)
     recalculate_progress(plan)
     path.write_text(json.dumps(plan, indent=2) + "\n")
 

@@ -41,7 +41,7 @@ def empty_plan():
                 "tasks": [],
             },
             {
-                "id": "99",
+                "id": "bugs",
                 "name": "Bugs",
                 "description": "Tasks identified as bugs requiring fixes",
                 "status": "pending",
@@ -129,7 +129,7 @@ def sample_plan():
                 "tasks": [],
             },
             {
-                "id": "99",
+                "id": "bugs",
                 "name": "Bugs",
                 "description": "Tasks identified as bugs requiring fixes",
                 "status": "pending",

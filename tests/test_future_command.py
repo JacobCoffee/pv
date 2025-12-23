@@ -102,7 +102,7 @@ class TestFutureCommand:
         output = json.loads(captured.out)
         phase_ids = [t["phase_id"] for t in output]
         assert "deferred" not in phase_ids
-        assert "99" not in phase_ids
+        assert "bugs" not in phase_ids
         assert "ideas" not in phase_ids
 
     def test_future_skips_completed_phases(self, capsys):

@@ -454,13 +454,56 @@ class TestFileIO:
         # Special phases should be in memory
         phase_ids = {p["id"] for p in result["phases"]}
         assert "deferred" in phase_ids
-        assert "99" in phase_ids
+        assert "bugs" in phase_ids
 
         # File should have been updated
         saved = json.loads(tmp_plan_path.read_text())
         saved_phase_ids = {p["id"] for p in saved["phases"]}
         assert "deferred" in saved_phase_ids
-        assert "99" in saved_phase_ids
+        assert "bugs" in saved_phase_ids
+
+    def test_phase_sorting_with_unknown_special_phase(self, tmp_plan_path):
+        """Test phase sorting handles unknown special phase IDs gracefully."""
+        from plan_view import io
+
+        # Temporarily add an unknown phase to SPECIAL_PHASE_IDS
+        original_ids = io.SPECIAL_PHASE_IDS.copy()
+        io.SPECIAL_PHASE_IDS.add("unknown-special")
+
+        try:
+            plan = {
+                "meta": {
+                    "project": "Test",
+                    "version": "1.0.0",
+                    "created_at": "2025-01-01T00:00:00Z",
+                    "updated_at": "2025-01-01T00:00:00Z",
+                    "business_plan_path": ".claude/BUSINESS_PLAN.md",
+                },
+                "summary": {},
+                "phases": [
+                    {"id": "unknown-special", "name": "Unknown", "description": "Test",
+                     "status": "pending", "progress": {"completed": 0, "total": 0, "percentage": 0}, "tasks": []},
+                    {"id": "0", "name": "Phase 0", "description": "Test",
+                     "status": "pending", "progress": {"completed": 0, "total": 0, "percentage": 0}, "tasks": []},
+                    {"id": "deferred", "name": "Deferred", "description": "Test",
+                     "status": "pending", "progress": {"completed": 0, "total": 0, "percentage": 0}, "tasks": []},
+                ],
+            }
+            tmp_plan_path.write_text(json.dumps(plan))
+
+            # Load and trigger save (which sorts phases)
+            loaded = load_plan(tmp_plan_path)
+            io.save_plan(tmp_plan_path, loaded)
+
+            result = json.loads(tmp_plan_path.read_text())
+            phase_ids = [p["id"] for p in result["phases"]]
+
+            # Numeric phases first, then special phases (bugs, ideas, deferred, unknown-special)
+            assert phase_ids[0] == "0"  # Numeric first
+            # Unknown special phase should be after known special phases
+            assert "unknown-special" in phase_ids
+        finally:
+            io.SPECIAL_PHASE_IDS = original_ids
 
 
 # ============ PROGRESS CALCULATION ============
@@ -990,7 +1033,7 @@ class TestValidateCommand:
         cli.cmd_bugs(sample_plan, as_json=True)
         captured = capsys.readouterr()
         result = json.loads(captured.out)
-        assert result["id"] == "99"
+        assert result["id"] == "bugs"
         assert result["name"] == "Bugs"
 
     def test_cmd_bugs_with_tasks(self, sample_plan_file, capsys):
@@ -1070,16 +1113,18 @@ class TestEditCommands:
         plan = json.loads(empty_plan_file.read_text())
         # 2 special phases (deferred, bugs) + 1 new = 3
         assert len(plan["phases"]) == 3
-        # New phase should be last (after special phases)
-        assert plan["phases"][-1]["name"] == "New Phase"
+        # New phase (ID 0) should be first (numeric phases before special phases)
+        assert plan["phases"][0]["name"] == "New Phase"
 
     def test_cmd_add_phase_increments_id(self, sample_plan_file, capsys):
         """Test phase ID increments correctly."""
         args = Namespace(file=sample_plan_file, name="Phase 3", desc=None)
         cli.cmd_add_phase(args)
         plan = json.loads(sample_plan_file.read_text())
-        # Sample plan has phases 0, 1 and bugs phase 99, new should be 100
-        assert plan["phases"][-1]["id"] == "100"
+        # Sample plan has phases 0, 1 and special phases (deferred, bugs), new should be 2
+        # Note: phases are sorted, so new phase appears before special phases
+        new_phase = next(p for p in plan["phases"] if p["id"] == "2")
+        assert new_phase["name"] == "Phase 3"
 
     def test_cmd_add_phase_file_not_found(self, tmp_path, capsys):
         """Test add_phase with non-existent file."""
@@ -1118,23 +1163,23 @@ class TestEditCommands:
 
     def test_cmd_add_task_to_empty_phase(self, empty_plan_file, capsys):
         """Test adding first task to an empty phase."""
-        # First add a phase (gets ID 100 since 99 is bugs phase)
+        # First add a phase (gets ID 0 since bugs is now text-based "bugs")
         args = Namespace(file=empty_plan_file, name="Phase", desc="Test")
         cli.cmd_add_phase(args)
 
         # Then add task to the new phase
         args = Namespace(
             file=empty_plan_file,
-            phase="100",
+            phase="0",
             title="First Task",
             agent=None,
             deps=None,
         )
         cli.cmd_add_task(args)
         plan = json.loads(empty_plan_file.read_text())
-        # Find the phase we added (last one)
-        new_phase = next(p for p in plan["phases"] if p["id"] == "100")
-        assert new_phase["tasks"][0]["id"] == "100.1.1"
+        # Find the phase we added
+        new_phase = next(p for p in plan["phases"] if p["id"] == "0")
+        assert new_phase["tasks"][0]["id"] == "0.1.1"
 
     def test_cmd_add_task_phase_not_found(self, sample_plan_file, capsys):
         """Test adding task to non-existent phase."""
@@ -1453,7 +1498,7 @@ class TestEditCommands:
         captured = capsys.readouterr()
         assert "Removed phase" in captured.out
         plan = json.loads(sample_plan_file.read_text())
-        # Sample plan has 0, 1 + special phases (deferred, 99). After removing 1, we have 3.
+        # Sample plan has 0, 1 + special phases (deferred, bugs). After removing 1, we have 3.
         assert len(plan["phases"]) == 3
         assert not any(p["id"] == "1" for p in plan["phases"])
 

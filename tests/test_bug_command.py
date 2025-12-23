@@ -41,16 +41,16 @@ class TestBugCommand:
         # Task should be removed from original phase
         assert len(plan["phases"][1]["tasks"]) == 1
         # Bugs phase should exist with the task
-        bugs = next(p for p in plan["phases"] if p["id"] == "99")
+        bugs = next(p for p in plan["phases"] if p["id"] == "bugs")
         assert len(bugs["tasks"]) == 1
         assert bugs["tasks"][0]["title"] == "Feature X"
-        assert bugs["tasks"][0]["id"] == "99.1.1"
+        assert bugs["tasks"][0]["id"] == "bugs.1.1"
 
     def test_cmd_bug_phase_structure(self, sample_plan_file, capsys):
         """Test bugs phase has correct structure."""
         plan = json.loads(sample_plan_file.read_text())
         # Bugs phase should exist by default
-        bugs = next(p for p in plan["phases"] if p["id"] == "99")
+        bugs = next(p for p in plan["phases"] if p["id"] == "bugs")
         assert bugs["name"] == "Bugs"
         assert bugs["description"] == "Tasks identified as bugs requiring fixes"
         assert bugs["status"] == "pending"
@@ -77,7 +77,7 @@ class TestBugCommand:
         cmd_bug.__wrapped__(plan, args)
 
         # Phase should have been created
-        bugs = next((p for p in plan["phases"] if p["id"] == "99"), None)
+        bugs = next((p for p in plan["phases"] if p["id"] == "bugs"), None)
         assert bugs is not None
         assert bugs["name"] == "Bugs"
         assert len(bugs["tasks"]) == 1
@@ -91,10 +91,10 @@ class TestBugCommand:
         args = Namespace(file=sample_plan_file, id="1.1.2")
         cli.cmd_bug(args)
         plan = json.loads(sample_plan_file.read_text())
-        bugs = next(p for p in plan["phases"] if p["id"] == "99")
+        bugs = next(p for p in plan["phases"] if p["id"] == "bugs")
         assert len(bugs["tasks"]) == 2
         # Second task should have incremented ID
-        assert bugs["tasks"][1]["id"] == "99.1.2"
+        assert bugs["tasks"][1]["id"] == "bugs.1.2"
 
     def test_cmd_bug_handles_malformed_ids(self, tmp_plan_path, capsys):
         """Test bug handles existing tasks with malformed IDs."""
@@ -126,7 +126,7 @@ class TestBugCommand:
                     ],
                 },
                 {
-                    "id": "99",
+                    "id": "bugs",
                     "name": "Bugs",
                     "description": "Bugs",
                     "status": "pending",
@@ -141,7 +141,7 @@ class TestBugCommand:
                             "tracking": {},
                         },
                         {
-                            "id": "99.x.y",
+                            "id": "bugs.x.y",
                             "title": "Non-numeric",
                             "status": "pending",
                             "agent_type": None,
@@ -156,9 +156,9 @@ class TestBugCommand:
         args = Namespace(file=tmp_plan_path, id="0.1.1")
         cli.cmd_bug(args)
         result = json.loads(tmp_plan_path.read_text())
-        bugs = next(p for p in result["phases"] if p["id"] == "99")
+        bugs = next(p for p in result["phases"] if p["id"] == "bugs")
         # Should still work, defaulting to 1 for the new task
-        assert bugs["tasks"][2]["id"] == "99.1.1"
+        assert bugs["tasks"][2]["id"] == "bugs.1.1"
 
     def test_cmd_bug_creates_new_task_when_not_found(self, sample_plan_file, capsys):
         """Test bug with non-existent task creates a new bug task."""
@@ -170,7 +170,7 @@ class TestBugCommand:
 
         # Verify task was created in bugs phase
         plan = json.loads(sample_plan_file.read_text())
-        bugs = next(p for p in plan["phases"] if p["id"] == "99")
+        bugs = next(p for p in plan["phases"] if p["id"] == "bugs")
         new_task = next(t for t in bugs["tasks"] if t["title"] == "Fix login validation bug")
         assert new_task["status"] == "pending"
 
@@ -215,7 +215,7 @@ class TestBugCommand:
 
         # Verify task details preserved
         plan = json.loads(sample_plan_file.read_text())
-        bugs = next(p for p in plan["phases"] if p["id"] == "99")
+        bugs = next(p for p in plan["phases"] if p["id"] == "bugs")
         moved_task = bugs["tasks"][0]
         assert moved_task["title"] == original_title
         assert moved_task["status"] == original_status

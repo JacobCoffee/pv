@@ -534,7 +534,7 @@ def _display_special_phase(plan: dict, phase_id: str, phase_name: str, *, as_jso
 
 def cmd_bugs(plan: dict, *, as_json: bool = False) -> None:
     """Display bugs phase with all tasks."""
-    _display_special_phase(plan, "99", "Bugs", as_json=as_json)
+    _display_special_phase(plan, "bugs", "Bugs", as_json=as_json)
 
 
 def cmd_deferred(plan: dict, *, as_json: bool = False) -> None:

@@ -637,7 +637,9 @@ class TestTaskIDGenerationEdgeCases:
         cli.cmd_add_task(args)
 
         result_plan = json.loads(tmp_plan_path.read_text())
-        new_task = result_plan["phases"][0]["tasks"][0]
+        # Find deferred phase (may not be at index 0 due to phase sorting)
+        deferred_phase = next(p for p in result_plan["phases"] if p["id"] == "deferred")
+        new_task = deferred_phase["tasks"][0]
         assert new_task["id"] == "deferred.1.1"
 
     def test_string_phase_id(self, tmp_plan_path):

@@ -133,7 +133,7 @@
       "type": "object",
       "required": ["id", "title", "status", "agent_type", "depends_on", "tracking"],
       "properties": {
-        "id": {"type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$"},
+        "id": {"type": "string", "pattern": "^[a-z0-9]+\\.\\d+\\.\\d+$", "description": "Task ID format: phase.section.task (e.g., '0.1.1' or 'bugs.1.1')"},
         "title": {"type": "string"},
         "status": {"$ref": "#/definitions/status"},
         "priority": {"$ref": "#/definitions/priority"},
@@ -143,7 +143,7 @@
         "depends_on": {
           "description": "Task IDs this task depends on (must be completed first)",
           "type": "array",
-          "items": {"type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$"},
+          "items": {"type": "string", "pattern": "^[a-z0-9]+\\.\\d+\\.\\d+$"},
           "uniqueItems": true
         },
         "subtasks": {

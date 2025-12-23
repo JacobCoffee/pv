@@ -183,7 +183,7 @@ class TestCompactCommand:
                     "tasks": [],
                 },
                 {
-                    "id": "99",
+                    "id": "bugs",
                     "name": "Bugs",
                     "description": "Bug tasks",
                     "status": "pending",
@@ -257,7 +257,7 @@ class TestCompactCommand:
                     "tasks": [],
                 },
                 {
-                    "id": "99",
+                    "id": "bugs",
                     "name": "Bugs",
                     "description": "Bugs",
                     "status": "pending",
@@ -313,7 +313,7 @@ class TestCompactCommand:
                     "tasks": [],
                 },
                 {
-                    "id": "99",
+                    "id": "bugs",
                     "name": "Bugs",
                     "description": "Bugs",
                     "status": "pending",
@@ -382,7 +382,7 @@ class TestCompactCommand:
                     "tasks": [],
                 },
                 {
-                    "id": "99",
+                    "id": "bugs",
                     "name": "Bugs",
                     "description": "Bugs",
                     "status": "pending",
@@ -447,7 +447,7 @@ class TestCompactCLI:
                     "tasks": [],
                 },
                 {
-                    "id": "99",
+                    "id": "bugs",
                     "name": "Bugs",
                     "description": "Bugs",
                     "status": "pending",
