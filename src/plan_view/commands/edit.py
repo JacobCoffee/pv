@@ -6,6 +6,7 @@ import shutil
 import sys
 from pathlib import Path
 
+from plan_view.commands.view import cmd_validate
 from plan_view.decorators import require_plan
 from plan_view.formatting import VALID_STATUSES, now_iso
 from plan_view.io import save_plan
@@ -511,8 +512,6 @@ def cmd_compact(plan: dict, args: argparse.Namespace) -> None:
 @require_plan
 def cmd_reconcile(plan: dict, args: argparse.Namespace) -> None:
     """Reconcile plan data: fix inconsistencies and validate."""
-    from plan_view.commands.view import cmd_validate
-
     fixes = []
 
     # 1. Cascade subtask status for completed tasks
@@ -522,7 +521,8 @@ def cmd_reconcile(plan: dict, args: argparse.Namespace) -> None:
                 for subtask in task.get("subtasks", []):
                     if subtask["status"] != "completed":
                         subtask["status"] = "completed"
-                        fixes.append(f"  Marked subtask {subtask['id']} as completed (parent {task['id']} is completed)")
+                        msg = f"  Marked subtask {subtask['id']} as completed (parent {task['id']} is completed)"
+                        fixes.append(msg)
 
     # 2. Ensure completed tasks have completed_at timestamp
     for phase in plan["phases"]:

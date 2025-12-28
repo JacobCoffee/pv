@@ -496,7 +496,7 @@ class DashboardHandler(http.server.SimpleHTTPRequestHandler):
         response = json.dumps(data).encode("utf-8")
         self.send_response(status)
         self.send_header("Content-Type", "application/json")
-        self.send_header("Content-Length", len(response))
+        self.send_header("Content-Length", str(len(response)))
         self.end_headers()
         self.wfile.write(response)
 
@@ -506,7 +506,7 @@ class DashboardHandler(http.server.SimpleHTTPRequestHandler):
         if plan is None:
             raise ValueError("Could not load plan.json")
 
-        task_id = data.get("id")
+        task_id: str = str(data.get("id", ""))
 
         if action == "done":
             self._set_task_status(plan, task_id, "completed")
@@ -517,17 +517,17 @@ class DashboardHandler(http.server.SimpleHTTPRequestHandler):
         elif action == "skip":
             self._set_task_status(plan, task_id, "skipped")
         elif action == "move":
-            target = data.get("target")
+            target: str = str(data.get("target", ""))
             self._move_task(plan, task_id, target)
         elif action == "add-task":
-            phase_id = data.get("phase")
-            title = data.get("title")
-            agent = data.get("agent")
-            skill = data.get("skill")
+            phase_id: str = str(data.get("phase", ""))
+            title: str = str(data.get("title", ""))
+            agent: str | None = data.get("agent")
+            skill: str | None = data.get("skill")
             self._add_task(plan, phase_id, title, agent, skill)
         elif action == "edit-task":
-            task_id = data.get("id")
-            title = data.get("title")
+            task_id = str(data.get("id", ""))
+            title = str(data.get("title", ""))
             agent = data.get("agent")
             skill = data.get("skill")
             self._edit_task(plan, task_id, title, agent, skill)
@@ -595,9 +595,7 @@ class DashboardHandler(http.server.SimpleHTTPRequestHandler):
         task["depends_on"] = []  # Clear dependencies when moving
         target_phase["tasks"].append(task)
 
-    def _add_task(
-        self, plan: dict, phase_id: str, title: str, agent: str | None, skill: str | None
-    ):
+    def _add_task(self, plan: dict, phase_id: str, title: str, agent: str | None, skill: str | None):
         """Add a new task to a phase."""
         phase = find_phase(plan, phase_id)
         if phase is None:
@@ -625,9 +623,7 @@ class DashboardHandler(http.server.SimpleHTTPRequestHandler):
             task["skill"] = skill
         phase["tasks"].append(task)
 
-    def _edit_task(
-        self, plan: dict, task_id: str, title: str, agent: str | None, skill: str | None
-    ):
+    def _edit_task(self, plan: dict, task_id: str, title: str, agent: str | None, skill: str | None):
         """Edit an existing task's title, agent, and skill."""
         result = find_task(plan, task_id)
         if result is None:

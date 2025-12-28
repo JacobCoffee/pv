@@ -594,12 +594,10 @@ def cmd_table(plan: dict, phase_id: str | None = None, *, as_json: bool = False)
         if phase is None:
             print(f"Phase '{phase_id}' not found!")
             return
-        for task in phase.get("tasks", []):
-            tasks_data.append((phase, task))
+        tasks_data.extend((phase, task) for task in phase.get("tasks", []))
     else:
         for phase in plan.get("phases", []):
-            for task in phase.get("tasks", []):
-                tasks_data.append((phase, task))
+            tasks_data.extend((phase, task) for task in phase.get("tasks", []))
 
     if not tasks_data:
         if as_json:
