@@ -155,6 +155,13 @@ def main() -> None:
         action="store_true",
         help=argparse.SUPPRESS,
     )
+    parser.add_argument(
+        "-a",
+        "--all",
+        action="store_true",
+        dest="show_all",
+        help=argparse.SUPPRESS,
+    )
 
     subparsers = parser.add_subparsers(dest="command", metavar="command")
 
@@ -377,7 +384,7 @@ def main() -> None:
         case "validate" | "v":
             cmd_validate(plan, args.file, as_json=as_json)
         case _:
-            cmd_overview(plan, as_json=as_json)
+            cmd_overview(plan, as_json=as_json, show_all=args.show_all)
 
 
 if __name__ == "__main__":

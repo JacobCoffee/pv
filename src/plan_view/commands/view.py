@@ -21,7 +21,7 @@ HELP_TEXT = """\
 View and edit plan.json for task tracking
 
 View Commands:
-  (none)              Show full plan overview
+  (none)              Show plan overview (completed phases hidden by default)
   current, c          Show current progress and next task
   next, n             Show next task to work on
   phase, p            Show current phase details
@@ -56,6 +56,7 @@ Utilities:
 
 Options:
   -f, --file FILE     Path to plan.json (default: ./plan.json)
+  -a, --all           Show all phases including completed (default view only)
   --json              Output as JSON (view commands only)
   -q, --quiet         Suppress output (edit commands only)
   -d, --dry-run       Show what would change without saving
@@ -63,8 +64,11 @@ Options:
 """
 
 
-def cmd_overview(plan: dict, *, as_json: bool = False) -> None:
-    """Display full plan overview with all phases and tasks."""
+def cmd_overview(plan: dict, *, as_json: bool = False, show_all: bool = False) -> None:
+    """Display full plan overview with all phases and tasks.
+
+    By default, completed phases are hidden. Use --all to show everything.
+    """
     if as_json:
         print(json.dumps(plan, indent=2))
         return
@@ -81,7 +85,16 @@ def cmd_overview(plan: dict, *, as_json: bool = False) -> None:
     print(f"\n{bold(f'📋 {project} v{version}')}")
     print(f"Progress: {pct:.0f}% ({completed}/{total} tasks)\n")
 
-    for phase in plan.get("phases", []):
+    # Filter phases based on show_all flag
+    all_phases = plan.get("phases", [])
+    phases_to_show = all_phases if show_all else [p for p in all_phases if p["status"] != "completed"]
+
+    # Show count of hidden completed phases
+    hidden_count = len(all_phases) - len(phases_to_show)
+    if hidden_count > 0:
+        print(dim(f"({hidden_count} completed phase{'s' if hidden_count != 1 else ''} hidden, use -a to show all)\n"))
+
+    for phase in phases_to_show:
         progress = phase.get("progress", {})
         phase_pct = progress.get("percentage", 0)
         icon = ICONS.get(phase["status"], "❓")
@@ -615,9 +628,7 @@ def cmd_table(plan: dict, phase_id: str | None = None, *, as_json: bool = False)
     title_width = min(40, max(len(task["title"]) for _, task in tasks_data))
     status_width = max(len(task["status"]) for _, task in tasks_data)
     phase_width = min(15, max(len(phase["name"]) for phase, _ in tasks_data))
-    agent_width = max(
-        len(task.get("agent_type") or "-") for _, task in tasks_data
-    )
+    agent_width = max(len(task.get("agent_type") or "-") for _, task in tasks_data)
     agent_width = min(20, max(5, agent_width))
     skill_width = max(len(task.get("skill") or "-") for _, task in tasks_data)
     skill_width = min(15, max(5, skill_width))
