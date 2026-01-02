@@ -28,6 +28,15 @@ ENV/
 *.swp
 *.swo
 .DS_Store
+
+# Node.js (not used in this project)
+node_modules/
+package.json
+package-lock.json
+bun.lock
+
+# Temporary/analysis files
+TRANSCRIPT.md
 docs/_build/
 .coverage
 htmlcov/
