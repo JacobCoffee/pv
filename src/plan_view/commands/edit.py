@@ -127,6 +127,10 @@ def cmd_add_task(plan: dict, args: argparse.Namespace) -> None:
     # Use section 1 if no tasks exist, otherwise increment task number
     next_id = f"{phase_id}.1.1" if not existing_tasks else f"{phase_id}.{max_section}.{max_task + 1}"
 
+    # Parse files if provided
+    files_arg = getattr(args, "files", None)
+    files_list = [f.strip() for f in files_arg.split(",")] if files_arg else []
+
     task = {
         "id": next_id,
         "title": args.title,
@@ -134,6 +138,7 @@ def cmd_add_task(plan: dict, args: argparse.Namespace) -> None:
         "agent_type": args.agent,
         "skill": getattr(args, "skill", None),
         "depends_on": args.deps.split(",") if args.deps else [],
+        "files": files_list if files_list else [],
         "tracking": {},
     }
 
@@ -174,8 +179,19 @@ def cmd_set(plan: dict, args: argparse.Namespace) -> None:
         task["skill"] = args.value if args.value != "none" else None
     elif args.field == "title":
         task["title"] = args.value
+    elif args.field == "files":
+        # Comma-separated list of file paths with optional line refs
+        if args.value in ("none", ""):
+            task["files"] = []
+        else:
+            task["files"] = [f.strip() for f in args.value.split(",")]
+    elif args.field == "research":
+        task["research"] = args.value if args.value != "none" else None
+    elif args.field == "plan":
+        task["plan"] = args.value if args.value != "none" else None
     else:
-        print(f"Error: Unknown field '{args.field}'. Use: status, agent, skill, title", file=sys.stderr)
+        valid_fields = "status, agent, skill, title, files, research, plan"
+        print(f"Error: Unknown field '{args.field}'. Use: {valid_fields}", file=sys.stderr)
         sys.exit(1)
 
     if not _is_dry_run(args):

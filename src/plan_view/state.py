@@ -114,6 +114,9 @@ def task_to_dict(phase: dict, task: dict) -> dict:
         "agent_type": task.get("agent_type"),
         "skill": task.get("skill"),
         "depends_on": task.get("depends_on", []),
+        "files": task.get("files", []),
+        "research": task.get("research"),
+        "plan": task.get("plan"),
         "tracking": task.get("tracking", {}),
     }
 

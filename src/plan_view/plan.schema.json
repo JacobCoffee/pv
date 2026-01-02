@@ -154,6 +154,20 @@
           "items": {"type": "string", "pattern": "^[a-z0-9]+\\.\\d+\\.\\d+$"},
           "uniqueItems": true
         },
+        "files": {
+          "description": "Relevant file paths with optional line references (e.g., 'src/auth.py:25-50')",
+          "type": "array",
+          "items": {"type": "string"},
+          "uniqueItems": true
+        },
+        "research": {
+          "description": "Compressed research context: key findings, patterns, relevant code locations",
+          "type": ["string", "null"]
+        },
+        "plan": {
+          "description": "Implementation plan: specific steps with code snippets for reliable execution",
+          "type": ["string", "null"]
+        },
         "subtasks": {
           "type": "array",
           "items": {"$ref": "#/definitions/subtask"}

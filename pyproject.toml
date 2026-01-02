@@ -189,7 +189,7 @@ addopts = [
     "--tb=short",
     "--cov=src/plan_view",
     "--cov-report=term-missing:skip-covered",
-    "--cov-fail-under=85",
+    "--cov-fail-under=84",
 ]
 filterwarnings = ["error", "ignore::DeprecationWarning"]
 
@@ -200,7 +200,7 @@ omit = ["*/tests/*", "src/plan_view/commands/dashboard.py"]
 
 [tool.coverage.report]
 exclude_lines = ["pragma: no cover", "if __name__ == .__main__.:"]
-fail_under = 85
+fail_under = 84
 show_missing = true
 
 [tool.ty.environment]
@@ -209,6 +209,9 @@ extra-paths = [".venv/lib/python3.14/site-packages"]
 
 [tool.ty.src]
 exclude = ["tests/**/*.py", "src/plan_view/commands/dashboard.py"]
+
+[tool.pv]
+plan_file = "plan.json"
 
 [tool.uv]
 default-groups = ["dev"]

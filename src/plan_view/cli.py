@@ -23,6 +23,9 @@ from plan_view.commands.edit import (
 )
 from plan_view.commands.view import (
     HELP_TEXT,
+    cmd_ai_actionable,
+    cmd_ai_context,
+    cmd_ai_files,
     cmd_bugs,
     cmd_current,
     cmd_deferred,
@@ -55,7 +58,7 @@ from plan_view.formatting import (
     green,
     now_iso,
 )
-from plan_view.io import load_plan, load_schema, save_plan
+from plan_view.io import load_plan, load_schema, resolve_plan_path, save_plan
 from plan_view.state import (
     find_phase,
     find_task,
@@ -88,6 +91,7 @@ __all__ = [
     "load_plan",
     "save_plan",
     "load_schema",
+    "resolve_plan_path",
     # State
     "recalculate_progress",
     "get_current_phase",
@@ -109,6 +113,10 @@ __all__ = [
     "cmd_deferred",
     "cmd_ideas",
     "cmd_validate",
+    # AI Commands
+    "cmd_ai_context",
+    "cmd_ai_actionable",
+    "cmd_ai_files",
     # Edit Commands
     "cmd_init",
     "cmd_add_phase",
@@ -162,6 +170,14 @@ def main() -> None:
         dest="show_all",
         help=argparse.SUPPRESS,
     )
+    parser.add_argument(
+        "--ai",
+        nargs="?",
+        const="context",
+        default=None,
+        metavar="MODE",
+        help=argparse.SUPPRESS,
+    )
 
     subparsers = parser.add_subparsers(dest="command", metavar="command")
 
@@ -200,6 +216,10 @@ def main() -> None:
     ideas_p = subparsers.add_parser("ideas", aliases=["i"], add_help=False)
     ideas_p.add_argument("--json", action="store_true", default=None)
 
+    # Files command (AI-optimized)
+    files_p = subparsers.add_parser("files", add_help=False)
+    files_p.add_argument("id", nargs="?", default=None)
+
     subparsers.add_parser("help", aliases=["h"], add_help=False)
 
     # Init
@@ -223,6 +243,7 @@ def main() -> None:
     add_task_p.add_argument("--agent")
     add_task_p.add_argument("--skill")
     add_task_p.add_argument("--deps")
+    add_task_p.add_argument("--files", help="Comma-separated file paths with optional line refs")
     add_task_p.add_argument("-q", "--quiet", action="store_true")
     add_task_p.add_argument("-d", "--dry-run", action="store_true")
 
@@ -301,6 +322,19 @@ def main() -> None:
         print(HELP_TEXT)
         return
 
+    # Handle --ai flag (AI-optimized output)
+    if args.ai is not None:
+        plan_path = resolve_plan_path(args.file)
+        plan = load_plan(plan_path)
+        if plan is None:
+            sys.exit(1)
+        assert plan is not None
+        if args.ai == "actionable":
+            cmd_ai_actionable(plan)
+        else:
+            cmd_ai_context(plan)
+        return
+
     # Handle edit commands that don't need to load plan first
     match args.command:
         case "init":
@@ -350,7 +384,8 @@ def main() -> None:
             return
 
     # View commands need to load plan
-    plan = load_plan(args.file)
+    plan_path = resolve_plan_path(args.file)
+    plan = load_plan(plan_path)
     if plan is None:
         sys.exit(1)
     assert plan is not None  # Help type checker after sys.exit
@@ -383,6 +418,8 @@ def main() -> None:
             cmd_ideas(plan, as_json=as_json)
         case "validate" | "v":
             cmd_validate(plan, args.file, as_json=as_json)
+        case "files":
+            cmd_ai_files(plan, args.id)
         case _:
             cmd_overview(plan, as_json=as_json, show_all=args.show_all)
 

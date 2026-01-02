@@ -17,6 +17,94 @@ from plan_view.state import (
     task_to_dict,
 )
 
+# ============================================================================
+# AI-Optimized Output Functions (Context-Efficient)
+# ============================================================================
+
+
+def _ai_task_line(task: dict, phase: dict | None = None) -> str:
+    """Single-line compact task representation for AI agents."""
+    parts = [task["id"], task["status"], task["title"]]
+    if task.get("agent_type"):
+        parts.append(f"agent:{task['agent_type']}")
+    if task.get("skill"):
+        parts.append(f"skill:{task['skill']}")
+    if task.get("depends_on"):
+        parts.append(f"deps:{','.join(task['depends_on'])}")
+    if phase:
+        parts.append(f"phase:{phase['id']}")
+    return " | ".join(parts)
+
+
+def _ai_phase_line(phase: dict) -> str:
+    """Single-line compact phase representation for AI agents."""
+    progress = phase.get("progress", {})
+    return f"{phase['id']} {phase['name']} ({progress.get('completed', 0)}/{progress.get('total', 0)})"
+
+
+def cmd_ai_context(plan: dict) -> None:
+    """Output minimal context for AI agents: next task + current phase + key info."""
+    lines = []
+
+    # Summary line
+    summary = plan.get("summary", {})
+    pct = summary.get("overall_progress", 0)
+    done = summary.get("completed_tasks", 0)
+    total = summary.get("total_tasks", 0)
+    lines.append(f"PROGRESS: {pct:.0f}% ({done}/{total})")
+
+    # Current phase
+    current = get_current_phase(plan)
+    if current:
+        lines.append(f"PHASE: {_ai_phase_line(current)}")
+
+    # Next task with full context
+    result = get_next_task(plan)
+    if result:
+        phase, task = result
+        lines.append(f"NEXT: {_ai_task_line(task, phase)}")
+        # Include files if present
+        if task.get("files"):
+            lines.append(f"FILES: {', '.join(task['files'])}")
+        # Include plan snippet if present
+        if task.get("plan"):
+            plan_preview = task["plan"][:200] + "..." if len(task["plan"]) > 200 else task["plan"]
+            lines.append(f"PLAN: {plan_preview}")
+    else:
+        lines.append("NEXT: none")
+
+    print("\n".join(lines))
+
+
+def cmd_ai_actionable(plan: dict) -> None:
+    """Output only actionable tasks (pending with deps met) for AI agents."""
+    task_status = {t["id"]: t["status"] for p in plan.get("phases", []) for t in p.get("tasks", [])}
+    lines = []
+
+    for phase in plan.get("phases", []):
+        if phase["id"] in SPECIAL_PHASE_IDS or phase["status"] in ("completed", "skipped"):
+            continue
+        for task in phase.get("tasks", []):
+            if task["status"] in ("pending", "in_progress"):
+                deps = task.get("depends_on", [])
+                if all(task_status.get(dep) == "completed" for dep in deps):
+                    lines.append(_ai_task_line(task, phase))
+
+    print("\n".join(lines) if lines else "none")
+
+
+def cmd_ai_files(plan: dict, task_id: str | None = None) -> None:
+    """Output files for a task or current task."""
+    result = find_task(plan, task_id) if task_id else get_next_task(plan)
+
+    if not result:
+        print("none")
+        return
+
+    _, task = result
+    files = task.get("files", [])
+    print("\n".join(files) if files else "none")
+
 HELP_TEXT = """\
 View and edit plan.json for task tracking
 
@@ -35,11 +123,16 @@ View Commands:
   ideas, i            Show ideas phase with all tasks
   validate, v         Validate plan.json structure
 
+AI-Optimized Commands (token-efficient output):
+  --ai                Compact context: progress, phase, next task with files/plan
+  --ai actionable     List only actionable tasks (deps met)
+  files [ID]          Show files for task ID or next task
+
 Edit Commands:
   init NAME           Create new plan.json
   add-phase NAME      Add a new phase
-  add-task PHASE TITLE  Add a new task to a phase (--agent, --skill)
-  set ID FIELD VALUE  Set a task field (status, agent, skill, title)
+  add-task PHASE TITLE  Add a new task to a phase (--agent, --skill, --files)
+  set ID FIELD VALUE  Set a task field (status, agent, skill, title, files, research, plan)
   done ID             Mark task as completed
   start ID            Mark task as in_progress
   block ID            Mark task as blocked
@@ -58,9 +151,18 @@ Options:
   -f, --file FILE     Path to plan.json (default: ./plan.json)
   -a, --all           Show all phases including completed (default view only)
   --json              Output as JSON (view commands only)
+  --ai                AI-optimized compact output (context-efficient)
   -q, --quiet         Suppress output (edit commands only)
   -d, --dry-run       Show what would change without saving
   -h, --help          Show this help message
+
+Configuration (for monorepos):
+  pv searches for config files walking up from cwd:
+    1. .pv.toml         - dedicated config file
+    2. pyproject.toml   - [tool.pv] section
+
+  Config format:
+    plan_file = "path/to/plan.json"  # relative to config location
 """
 
 
