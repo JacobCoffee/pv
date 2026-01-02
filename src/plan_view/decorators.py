@@ -6,7 +6,7 @@ from collections.abc import Callable
 from functools import wraps
 from typing import Concatenate
 
-from plan_view.io import load_plan
+from plan_view.io import load_plan, resolve_plan_path
 
 
 def require_plan[**P, R](
@@ -34,8 +34,10 @@ def require_plan[**P, R](
 
     @wraps(func)
     def wrapper(args: argparse.Namespace, /, *inner_args: P.args, **inner_kwargs: P.kwargs) -> R:
-        # Get the file path from args
-        file_path = args.file
+        # Resolve the file path from config if not explicitly set
+        file_path = resolve_plan_path(args.file)
+        # Update args.file so save operations use the resolved path
+        args.file = file_path
 
         # Load the plan
         plan = load_plan(file_path)

@@ -5,11 +5,93 @@ import sys
 from importlib.resources import files
 from pathlib import Path
 
+if sys.version_info >= (3, 11):
+    import tomllib
+else:
+    import tomli as tomllib  # type: ignore[import-not-found]
+
 from plan_view.formatting import now_iso
 from plan_view.state import SPECIAL_PHASE_IDS, recalculate_progress
 
 # Order for special phases (always sorted last in this order)
 SPECIAL_PHASE_ORDER = ["bugs", "ideas", "deferred"]
+
+# Config file names to search for
+CONFIG_FILES = [".pv.toml", "pyproject.toml"]
+
+
+def _find_config_file(start_dir: Path | None = None) -> tuple[Path, dict] | None:
+    """Find config file by walking up from start_dir to filesystem root.
+
+    Searches for .pv.toml first, then pyproject.toml with [tool.pv] section.
+    Returns (config_path, config_dict) or None if not found.
+    """
+    current = (start_dir or Path.cwd()).resolve()
+
+    while True:
+        # Check .pv.toml first (dedicated config file)
+        pv_toml = current / ".pv.toml"
+        if pv_toml.exists():
+            try:
+                config = tomllib.loads(pv_toml.read_text())
+                return pv_toml, config
+            except tomllib.TOMLDecodeError:
+                pass  # Invalid TOML, continue searching
+
+        # Check pyproject.toml for [tool.pv] section
+        pyproject = current / "pyproject.toml"
+        if pyproject.exists():
+            try:
+                data = tomllib.loads(pyproject.read_text())
+                if "tool" in data and "pv" in data["tool"]:
+                    return pyproject, data["tool"]["pv"]
+            except tomllib.TOMLDecodeError:
+                pass  # Invalid TOML, continue searching
+
+        # Move to parent directory
+        parent = current.parent
+        if parent == current:
+            # Reached filesystem root
+            return None
+        current = parent
+
+
+def resolve_plan_path(explicit_path: Path | None = None) -> Path:
+    """Resolve the plan.json path using config files if no explicit path given.
+
+    Resolution order:
+    1. If explicit_path is provided and not the default, use it directly
+    2. Search for .pv.toml or pyproject.toml [tool.pv] walking up from cwd
+    3. If config found with plan_file setting, resolve relative to config location
+    4. Fall back to ./plan.json
+
+    Config file format (.pv.toml or pyproject.toml [tool.pv]):
+        plan_file = "path/to/plan.json"  # Relative to config file location
+    """
+    default_path = Path("plan.json")
+
+    # If user explicitly specified a non-default path, use it
+    if explicit_path is not None and explicit_path != default_path:
+        return explicit_path
+
+    # Search for config file
+    result = _find_config_file()
+    if result is None:
+        return explicit_path or default_path
+
+    config_path, config = result
+    plan_file = config.get("plan_file")
+
+    if plan_file:
+        # Resolve relative to config file's directory
+        return (config_path.parent / plan_file).resolve()
+
+    # Config exists but no plan_file setting - check for plan.json in config dir
+    config_dir_plan = config_path.parent / "plan.json"
+    if config_dir_plan.exists():
+        return config_dir_plan
+
+    return explicit_path or default_path
 
 
 def _phase_sort_key(phase: dict) -> tuple[int, int | str]:
