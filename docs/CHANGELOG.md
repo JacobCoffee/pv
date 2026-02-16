@@ -2,6 +2,53 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.4.0](https://github.com/JacobCoffee/pv/compare/v1.3.0..v1.4.0) - 2026-02-16
+
+
+### Bug Fixes
+
+
+- resolve lint errors and adjust coverage threshold - ([ca3e864](https://github.com/JacobCoffee/pv/commit/ca3e8648a3ed504597d954a18c237cc45545b758)) - Jacob Coffee
+
+
+### Documentation
+
+
+- regenerate changelog for v1.3.0 - ([2e431c7](https://github.com/JacobCoffee/pv/commit/2e431c72e0171256838410054a1d4c9afeb7f8d8)) - github-actions[bot]
+
+- add future, ideas, idea, compact commands to docs - ([6670107](https://github.com/JacobCoffee/pv/commit/6670107f5f39e5c27f9187aa942b6811204358d3)) - Jacob Coffee
+
+- use sphinx tabs for installation options - ([927b69e](https://github.com/JacobCoffee/pv/commit/927b69e4fab848f129a073d10522ae37a5e1883d)) - Jacob Coffee
+
+
+### Features
+
+
+- add optional skill field to tasks - ([1519fc0](https://github.com/JacobCoffee/pv/commit/1519fc0b7d67498dae72799e8e75934de0051142)) - Jacob Coffee
+
+- add dashboard editing and table command - ([83311aa](https://github.com/JacobCoffee/pv/commit/83311aa0fa5bd2be883c0ab7d1e365ea8b48ef27)) - Jacob Coffee
+
+- hide completed phases by default, add --all flag - ([ec16a09](https://github.com/JacobCoffee/pv/commit/ec16a094c9d70378854c3ce84d07651a66aa0105)) - Jacob Coffee
+
+- add AI-optimized output mode and context engineering fields - ([8f43216](https://github.com/JacobCoffee/pv/commit/8f43216a05aad5f569b94cabfd5c1101a3249de1)) - Jacob Coffee
+
+- add monorepo config resolution and dashboard improvements - ([38ee31d](https://github.com/JacobCoffee/pv/commit/38ee31d8dfd60121f1aef842ed9632b1c7a6c910)) - Jacob Coffee
+
+- add periodic delta backups every 15 mutations - ([0dd6f9c](https://github.com/JacobCoffee/pv/commit/0dd6f9cd94bbffbc8a005223bd937d855eec3724)) - Jacob Coffee
+
+
+### Miscellaneous Chores
+
+
+- update gitignore for node files and temp files - ([8d08e0b](https://github.com/JacobCoffee/pv/commit/8d08e0bc638212cae69779c7f3badab635fa800d)) - Jacob Coffee
+
+- bump version to 1.4.0 - ([6759125](https://github.com/JacobCoffee/pv/commit/6759125e10b5ea52ba7752098f5e58f43abd0fac)) - Jacob Coffee
+
+
+### Refactoring
+
+
+- change bugs phase ID from '99' to 'bugs' with phase sorting - ([aa62dd5](https://github.com/JacobCoffee/pv/commit/aa62dd5703c282edfd388e50fbcd470d8a28abc3)) - Jacob Coffee
 ## [1.3.0](https://github.com/JacobCoffee/pv/compare/v1.2.0..v1.3.0) - 2025-12-22
 
 
