@@ -2,13 +2,29 @@
 
 All notable changes to this project will be documented in this file.
 
-## [unreleased]
+## [1.5.0](https://github.com/JacobCoffee/pv/compare/v1.4.1..v1.5.0) - 2026-02-16
 
 
 ### Documentation
 
 
 - regenerate changelog for v1.4.1 - ([d06b6db](https://github.com/JacobCoffee/pv/commit/d06b6db4848b8d1883fb40c42ca017c3e1eaa66c)) - github-actions[bot]
+
+- regenerate changelog for v1.5.0 - ([88f4761](https://github.com/JacobCoffee/pv/commit/88f4761f6aa0c3df4006dbca5e4db0f0d81e500f)) - github-actions[bot]
+
+- regenerate changelog for v1.5.0 - ([0b83bd4](https://github.com/JacobCoffee/pv/commit/0b83bd4fe6017c2d9e607db90b0fdfd52b54d16f)) - Jacob Coffee
+
+
+### Features
+
+
+- add shell tab completion for bash, zsh, and fish - ([ec180dd](https://github.com/JacobCoffee/pv/commit/ec180dd37714868a214ce7407078ead0c7c60e19)) - Jacob Coffee
+
+
+### Miscellaneous Chores
+
+
+- bump version to 1.5.0 - ([90b078a](https://github.com/JacobCoffee/pv/commit/90b078aa13174fd19813b70da4bc17754bbff73e)) - Jacob Coffee
 ## [1.4.1](https://github.com/JacobCoffee/pv/compare/v1.4.0..v1.4.1) - 2026-02-16
 
 
