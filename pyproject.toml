@@ -1,6 +1,6 @@
 [project]
 name = "plan-view"
-version = "1.4.1"
+version = "1.5.0"
 description = "Pretty print plan.json for task tracking"
 readme = "README.md"
 license = "MIT"
@@ -91,7 +91,9 @@ convention = "google"
 "tests/**/*.py" = [
     "ARG002",  # Unused method argument (pytest fixtures)
     "D100",    # Missing docstring in public module
+    "D102",    # Missing docstring in public method (test methods)
     "D103",    # Missing docstring in public function
+    "S604",    # Namespace(shell=...) false positive
 ]
 "docs/conf.py" = [
     "INP001",  # Sphinx config is not a package

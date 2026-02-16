@@ -2,8 +2,6 @@
 
 import json
 import subprocess
-import tempfile
-from pathlib import Path
 
 
 class TestAICommands:
@@ -16,7 +14,7 @@ class TestAICommands:
 
         result = subprocess.run(
             ["pv", "-f", str(plan_file), "--ai"],
-            capture_output=True,
+            check=False, capture_output=True,
             text=True,
         )
         assert result.returncode == 0
@@ -31,7 +29,7 @@ class TestAICommands:
 
         result = subprocess.run(
             ["pv", "-f", str(plan_file), "--ai", "actionable"],
-            capture_output=True,
+            check=False, capture_output=True,
             text=True,
         )
         assert result.returncode == 0
@@ -46,7 +44,7 @@ class TestAICommands:
 
         result = subprocess.run(
             ["pv", "-f", str(plan_file), "files"],
-            capture_output=True,
+            check=False, capture_output=True,
             text=True,
         )
         assert result.returncode == 0
@@ -89,7 +87,7 @@ class TestAICommands:
 
         result = subprocess.run(
             ["pv", "-f", str(plan_file), "files"],
-            capture_output=True,
+            check=False, capture_output=True,
             text=True,
         )
         assert result.returncode == 0
@@ -142,7 +140,7 @@ class TestAICommands:
 
         result = subprocess.run(
             ["pv", "-f", str(plan_file), "files", "0.1.2"],
-            capture_output=True,
+            check=False, capture_output=True,
             text=True,
         )
         assert result.returncode == 0
@@ -163,7 +161,7 @@ class TestSetNewFields:
 
         result = subprocess.run(
             ["pv", "-f", str(plan_file), "set", task_id, "files", "src/main.py:10,src/utils.py"],
-            capture_output=True,
+            check=False, capture_output=True,
             text=True,
         )
         assert result.returncode == 0
@@ -182,7 +180,7 @@ class TestSetNewFields:
 
         result = subprocess.run(
             ["pv", "-f", str(plan_file), "set", task_id, "research", "Found pattern in src/auth.py:25"],
-            capture_output=True,
+            check=False, capture_output=True,
             text=True,
         )
         assert result.returncode == 0
@@ -200,7 +198,7 @@ class TestSetNewFields:
 
         result = subprocess.run(
             ["pv", "-f", str(plan_file), "set", task_id, "plan", "1. Add function\n2. Test it"],
-            capture_output=True,
+            check=False, capture_output=True,
             text=True,
         )
         assert result.returncode == 0
@@ -246,7 +244,7 @@ class TestSetNewFields:
 
         result = subprocess.run(
             ["pv", "-f", str(plan_file), "set", "0.1.1", "files", "none"],
-            capture_output=True,
+            check=False, capture_output=True,
             text=True,
         )
         assert result.returncode == 0
@@ -277,7 +275,7 @@ class TestAddTaskWithFiles:
                 "--files",
                 "src/new.py:1-10,src/helper.py",
             ],
-            capture_output=True,
+            check=False, capture_output=True,
             text=True,
         )
         assert result.returncode == 0

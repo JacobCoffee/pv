@@ -5,6 +5,7 @@ import sys
 from pathlib import Path
 
 from plan_view.commands.dashboard import cmd_dashboard
+from plan_view.completions import cmd_complete, cmd_completion
 from plan_view.commands.edit import (
     cmd_add_phase,
     cmd_add_task,
@@ -133,6 +134,9 @@ __all__ = [
     "cmd_rm",
     "cmd_compact",
     "cmd_restore",
+    # Completion Commands
+    "cmd_completion",
+    "cmd_complete",
     # Entry point
     "main",
 ]
@@ -323,6 +327,17 @@ def main() -> None:
     dashboard_p = subparsers.add_parser("dashboard", add_help=False)
     dashboard_p.add_argument("-p", "--port", type=int)
 
+    # Shell completion
+    completion_p = subparsers.add_parser("completion", add_help=False)
+    completion_p.add_argument("shell", choices=["bash", "zsh", "fish"])
+
+    # Hidden helper for dynamic completions
+    complete_p = subparsers.add_parser("_complete", add_help=False)
+    complete_p.add_argument(
+        "completion_type",
+        choices=["task-ids", "phase-ids", "restore-points", "statuses", "set-fields", "rm-types", "ai-modes"],
+    )
+
     args = parser.parse_args()
 
     # Help command
@@ -392,6 +407,12 @@ def main() -> None:
             return
         case "dashboard":
             cmd_dashboard(args)
+            return
+        case "completion":
+            cmd_completion(args)
+            return
+        case "_complete":
+            cmd_complete(args)
             return
 
     # View commands need to load plan

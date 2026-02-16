@@ -1,9 +1,6 @@
 """Tests for monorepo config resolution (pyproject.toml and .pv.toml support)."""
 
 import json
-import os
-
-import pytest
 
 from plan_view.io import _find_config_file, resolve_plan_path
 
