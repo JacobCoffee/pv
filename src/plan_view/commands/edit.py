@@ -35,6 +35,21 @@ def cmd_init(args: argparse.Namespace) -> None:
         print(f"Error: {path} already exists. Use --force to overwrite.", file=sys.stderr)
         sys.exit(1)
 
+    if path.exists() and args.force:
+        backup_dir = Path(".claude/plan-view")
+        backup_dir.mkdir(parents=True, exist_ok=True)
+        plan_name = path.stem
+        _rotate_backups(backup_dir, plan_name)
+        backup_path = backup_dir / f"{plan_name}.json.1"
+        shutil.copy2(path, backup_path)
+        # Reset periodic backup counter
+        periodic_path = backup_dir / "periodic.json"
+        if periodic_path.exists():
+            periodic_path.unlink()
+
+        if not getattr(args, "quiet", False):
+            print(f"{_prefix(args)} Backed up existing plan to {backup_path}")
+
     plan = {
         "meta": {
             "project": args.name,

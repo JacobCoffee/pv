@@ -1,14 +1,13 @@
 """Plan file I/O operations."""
 
+import copy
 import json
 import sys
+import tomllib
 from importlib.resources import files
 from pathlib import Path
 
-if sys.version_info >= (3, 11):
-    import tomllib
-else:
-    import tomli as tomllib  # type: ignore[import-not-found]
+import jsonpatch
 
 from plan_view.formatting import now_iso
 from plan_view.state import SPECIAL_PHASE_IDS, recalculate_progress
@@ -181,6 +180,54 @@ def save_plan(path: Path, plan: dict) -> None:
     _sort_phases(plan)
     recalculate_progress(plan)
     path.write_text(json.dumps(plan, indent=2) + "\n")
+    maybe_periodic_backup(path, plan)
+
+
+def _rotate_delta_backups(backup_dir: Path, max_deltas: int = 5) -> None:
+    """Rotate delta backup files: .delta.1 → .delta.2, etc."""
+    for i in range(max_deltas, 0, -1):
+        old = backup_dir / f"plan.delta.{i}.json"
+        new = backup_dir / f"plan.delta.{i + 1}.json"
+        if old.exists():
+            if i == max_deltas:
+                old.unlink()
+            else:
+                old.rename(new)
+
+
+def maybe_periodic_backup(path: Path, plan: dict) -> None:
+    """Create periodic delta backups every 15 saves. Never raises."""
+    try:
+        backup_dir = path.parent / ".claude" / "plan-view"
+        if not backup_dir.exists():
+            # Use parent's .claude/plan-view if plan is not at project root
+            backup_dir = Path(".claude/plan-view")
+        backup_dir.mkdir(parents=True, exist_ok=True)
+
+        periodic_path = backup_dir / "periodic.json"
+
+        if periodic_path.exists():
+            state = json.loads(periodic_path.read_text())
+        else:
+            state = {"count": 0, "base": copy.deepcopy(plan)}
+
+        state["count"] += 1
+
+        if state["count"] % 15 == 0:
+            # Compare current plan to base (exclude updated_at for meaningful diff)
+            base = state["base"]
+            if plan != base:
+                patch = jsonpatch.make_patch(base, plan)
+                patch_list = patch.patch
+                if patch_list:
+                    _rotate_delta_backups(backup_dir)
+                    delta_path = backup_dir / "plan.delta.1.json"
+                    delta_path.write_text(json.dumps(patch_list, indent=2) + "\n")
+                state["base"] = copy.deepcopy(plan)
+
+        periodic_path.write_text(json.dumps(state, indent=2) + "\n")
+    except Exception:  # noqa: BLE001, S110
+        pass  # Backup failures must never crash the CLI
 
 
 def load_schema() -> dict:

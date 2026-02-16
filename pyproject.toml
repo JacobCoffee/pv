@@ -18,7 +18,7 @@ classifiers = [
     "Typing :: Typed",
 ]
 
-dependencies = ["jsonschema>=4.23"]
+dependencies = ["jsonschema>=4.23", "jsonpatch>=1.33"]
 
 [dependency-groups]
 dev = [
