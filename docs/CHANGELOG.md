@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.4.1](https://github.com/JacobCoffee/pv/compare/v1.4.0..v1.4.1) - 2026-02-16
+
+
+### Documentation
+
+
+- regenerate changelog for v1.4.0 - ([0c2aebc](https://github.com/JacobCoffee/pv/commit/0c2aebc92018ac897a892c9e0fe9378e61e24118)) - github-actions[bot]
+
+
+### Features
+
+
+- add restore command for plan recovery from backups - ([7a4e3e6](https://github.com/JacobCoffee/pv/commit/7a4e3e6b20a390a57f6f184451f79152ec803405)) - Jacob Coffee
 ## [1.4.0](https://github.com/JacobCoffee/pv/compare/v1.3.0..v1.4.0) - 2026-02-16
 
 
