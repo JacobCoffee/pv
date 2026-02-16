@@ -2,13 +2,14 @@
 
 import argparse
 import contextlib
+import json
 import shutil
 import sys
 from pathlib import Path
 
 from plan_view.commands.view import cmd_validate
 from plan_view.decorators import require_plan
-from plan_view.formatting import VALID_STATUSES, now_iso
+from plan_view.formatting import BOLD, DIM, RESET, VALID_STATUSES, now_iso
 from plan_view.io import save_plan
 from plan_view.state import (
     find_phase,
@@ -602,3 +603,122 @@ def cmd_reconcile(plan: dict, args: argparse.Namespace) -> None:
     if not getattr(args, "quiet", False):
         print("\nValidating...")
     cmd_validate(plan, args.file, as_json=getattr(args, "json", False))
+
+
+def _list_restore_points(backup_dir: Path) -> list[dict]:
+    """Discover available restore points in backup_dir.
+
+    Returns list of dicts with keys: path, label, size, modified, type.
+    Sorted newest-first.
+    """
+    points: list[dict] = []
+
+    # Full backups: plan.json.1, plan.json.2, ...
+    for f in sorted(backup_dir.glob("plan.json.[0-9]*")):
+        suffix = f.name.split(".")[-1]
+        stat = f.stat()
+        try:
+            data = json.loads(f.read_text())
+            project = data.get("meta", {}).get("project", "?")
+            updated = data.get("meta", {}).get("updated_at", "?")
+            label = f"Full backup #{suffix} — {project} (updated {updated})"
+        except (json.JSONDecodeError, KeyError):
+            label = f"Full backup #{suffix}"
+        points.append({
+            "path": f,
+            "label": label,
+            "size": stat.st_size,
+            "modified": stat.st_mtime,
+            "type": "full",
+            "index": int(suffix),
+        })
+
+    # Delta backups: plan.delta.1.json, plan.delta.2.json, ...
+    for f in sorted(backup_dir.glob("plan.delta.[0-9]*.json")):
+        parts = f.stem.split(".")
+        suffix = parts[2] if len(parts) >= 3 else "?"
+        stat = f.stat()
+        try:
+            patch_ops = json.loads(f.read_text())
+            op_count = len(patch_ops) if isinstance(patch_ops, list) else 0
+            label = f"Delta patch #{suffix} — {op_count} operation{'s' if op_count != 1 else ''}"
+        except (json.JSONDecodeError, KeyError):
+            label = f"Delta patch #{suffix}"
+        points.append({
+            "path": f,
+            "label": label,
+            "size": stat.st_size,
+            "modified": stat.st_mtime,
+            "type": "delta",
+            "index": int(suffix),
+        })
+
+    # Sort by modification time, newest first
+    points.sort(key=lambda p: p["modified"], reverse=True)
+    return points
+
+
+def cmd_restore(args: argparse.Namespace) -> None:
+    """List restore points and restore a chosen backup."""
+    plan_path = Path(args.file)
+    backup_dir = Path(".claude/plan-view")
+
+    if not backup_dir.exists():
+        print("No backup directory found (.claude/plan-view/)", file=sys.stderr)
+        sys.exit(1)
+
+    points = _list_restore_points(backup_dir)
+    if not points:
+        print("No restore points found.", file=sys.stderr)
+        sys.exit(1)
+
+    # List mode (no --point given)
+    choice = getattr(args, "point", None)
+    if choice is None:
+        print(f"{BOLD}Available restore points:{RESET}\n")
+        for idx, pt in enumerate(points, 1):
+            type_tag = "full" if pt["type"] == "full" else "delta"
+            print(f"  {BOLD}{idx}{RESET}) [{DIM}{type_tag}{RESET}] {pt['label']}")
+        print(f"\n{DIM}Usage: pv restore <number>{RESET}")
+        return
+
+    # Restore mode
+    try:
+        idx = int(choice) - 1
+    except ValueError:
+        print(f"Error: '{choice}' is not a valid number", file=sys.stderr)
+        sys.exit(1)
+
+    if idx < 0 or idx >= len(points):
+        print(f"Error: choice must be between 1 and {len(points)}", file=sys.stderr)
+        sys.exit(1)
+
+    selected = points[idx]
+
+    if selected["type"] == "delta":
+        print("Error: Delta patches cannot be restored directly. Choose a full backup.", file=sys.stderr)
+        sys.exit(1)
+
+    # Read restore content before rotation moves the file
+    restore_content = selected["path"].read_bytes()
+
+    # Back up current plan before restoring
+    if plan_path.exists():
+        backup_dir.mkdir(parents=True, exist_ok=True)
+        plan_name = plan_path.stem
+        _rotate_backups(backup_dir, plan_name)
+        pre_restore_path = backup_dir / f"{plan_name}.json.1"
+        shutil.copy2(plan_path, pre_restore_path)
+        if not getattr(args, "quiet", False):
+            print(f"Backed up current plan to {pre_restore_path}")
+
+    # Write the restore content over the current plan
+    if not _is_dry_run(args):
+        plan_path.write_bytes(restore_content)
+        # Reset periodic counter since we changed the plan
+        periodic_path = backup_dir / "periodic.json"
+        if periodic_path.exists():
+            periodic_path.unlink()
+
+    if not getattr(args, "quiet", False):
+        print(f"{_prefix(args)} Restored from: {selected['label']}")

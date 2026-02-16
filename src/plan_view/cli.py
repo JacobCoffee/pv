@@ -16,6 +16,7 @@ from plan_view.commands.edit import (
     cmd_idea,
     cmd_init,
     cmd_reconcile,
+    cmd_restore,
     cmd_rm,
     cmd_set,
     cmd_skip,
@@ -131,6 +132,7 @@ __all__ = [
     "cmd_idea",
     "cmd_rm",
     "cmd_compact",
+    "cmd_restore",
     # Entry point
     "main",
 ]
@@ -305,6 +307,12 @@ def main() -> None:
     compact_p.add_argument("-q", "--quiet", action="store_true")
     compact_p.add_argument("-d", "--dry-run", action="store_true")
 
+    # Restore
+    restore_p = subparsers.add_parser("restore", add_help=False)
+    restore_p.add_argument("point", nargs="?", default=None)
+    restore_p.add_argument("-q", "--quiet", action="store_true")
+    restore_p.add_argument("-d", "--dry-run", action="store_true")
+
     # Reconcile
     reconcile_p = subparsers.add_parser("reconcile", add_help=False)
     reconcile_p.add_argument("-q", "--quiet", action="store_true")
@@ -375,6 +383,9 @@ def main() -> None:
             return
         case "compact":
             cmd_compact(args)
+            return
+        case "restore":
+            cmd_restore(args)
             return
         case "reconcile":
             cmd_reconcile(args)
