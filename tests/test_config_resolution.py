@@ -1,7 +1,10 @@
 """Tests for monorepo config resolution (pyproject.toml and .pv.toml support)."""
 
 import json
+from argparse import Namespace
+from pathlib import Path
 
+from plan_view.commands.edit import cmd_done
 from plan_view.io import _find_config_file, resolve_plan_path
 
 
@@ -158,11 +161,6 @@ class TestMonorepoIntegration:
 
     def test_edit_command_from_subdirectory(self, tmp_path, monkeypatch, sample_plan):
         """Test that edit commands work from subdirectory with config."""
-        from argparse import Namespace
-        from pathlib import Path
-
-        from plan_view.commands.edit import cmd_done
-
         # Setup monorepo
         root = tmp_path / "project"
         root.mkdir()

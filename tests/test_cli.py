@@ -11,6 +11,7 @@ from unittest.mock import patch
 import pytest
 
 from plan_view import cli
+from plan_view import io as pv_io
 from plan_view.commands.edit import cmd_defer
 from plan_view.io import load_plan
 from plan_view.state import format_phase_suggestions, format_task_suggestions
@@ -464,11 +465,9 @@ class TestFileIO:
 
     def test_phase_sorting_with_unknown_special_phase(self, tmp_plan_path):
         """Test phase sorting handles unknown special phase IDs gracefully."""
-        from plan_view import io
-
         # Temporarily add an unknown phase to SPECIAL_PHASE_IDS
-        original_ids = io.SPECIAL_PHASE_IDS.copy()
-        io.SPECIAL_PHASE_IDS.add("unknown-special")
+        original_ids = pv_io.SPECIAL_PHASE_IDS.copy()
+        pv_io.SPECIAL_PHASE_IDS.add("unknown-special")
 
         try:
             plan = {
@@ -511,7 +510,7 @@ class TestFileIO:
 
             # Load and trigger save (which sorts phases)
             loaded = load_plan(tmp_plan_path)
-            io.save_plan(tmp_plan_path, loaded)
+            pv_io.save_plan(tmp_plan_path, loaded)
 
             result = json.loads(tmp_plan_path.read_text())
             phase_ids = [p["id"] for p in result["phases"]]
@@ -521,7 +520,7 @@ class TestFileIO:
             # Unknown special phase should be after known special phases
             assert "unknown-special" in phase_ids
         finally:
-            io.SPECIAL_PHASE_IDS = original_ids
+            pv_io.SPECIAL_PHASE_IDS = original_ids
 
 
 # ============ PROGRESS CALCULATION ============

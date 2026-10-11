@@ -105,6 +105,7 @@ def cmd_ai_files(plan: dict, task_id: str | None = None) -> None:
     files = task.get("files", [])
     print("\n".join(files) if files else "none")
 
+
 HELP_TEXT = """\
 View and edit plan.json for task tracking
 

@@ -33,9 +33,10 @@ def _find_config_file(start_dir: Path | None = None) -> tuple[Path, dict] | None
         if pv_toml.exists():
             try:
                 config = tomllib.loads(pv_toml.read_text())
-                return pv_toml, config
             except tomllib.TOMLDecodeError:
                 pass  # Invalid TOML, continue searching
+            else:
+                return pv_toml, config
 
         # Check pyproject.toml for [tool.pv] section
         pyproject = current / "pyproject.toml"

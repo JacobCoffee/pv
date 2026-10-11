@@ -393,33 +393,33 @@ def _fish_completion() -> str:
     lines.append("")
     lines.append("# Dynamic completions for task ID commands")
     lines.extend(
-        f'complete -c pv -n "__fish_seen_subcommand_from {cmd}" '
-        f'-a "(pv _complete task-ids 2>/dev/null)" -d "Task ID"'
+        f'complete -c pv -n "__fish_seen_subcommand_from {cmd}" -a "(pv _complete task-ids 2>/dev/null)" -d "Task ID"'
         for cmd in sorted(_TASK_ID_COMMANDS)
     )
 
     lines.append("")
     lines.append("# Dynamic completions for phase ID commands")
     lines.extend(
-        f'complete -c pv -n "__fish_seen_subcommand_from {cmd}" '
-        f'-a "(pv _complete phase-ids 2>/dev/null)" -d "Phase ID"'
+        f'complete -c pv -n "__fish_seen_subcommand_from {cmd}" -a "(pv _complete phase-ids 2>/dev/null)" -d "Phase ID"'
         for cmd in sorted(_PHASE_ID_COMMANDS)
     )
 
-    lines.extend([
-        "",
-        "# rm type completions",
-        'complete -c pv -n "__fish_seen_subcommand_from rm" -a "phase task" -d "Type"',
-        "",
-        "# restore point completions",
-        'complete -c pv -n "__fish_seen_subcommand_from restore" '
-        '-a "(pv _complete restore-points 2>/dev/null)" -d "Restore point"',
-        "",
-        "# completion shell completions",
-        'complete -c pv -n "__fish_seen_subcommand_from completion" -a "bash zsh fish" -d "Shell"',
-        "",
-        "# AI mode completions",
-        'complete -c pv -l ai -a "context actionable" -d "AI mode"',
-    ])
+    lines.extend(
+        [
+            "",
+            "# rm type completions",
+            'complete -c pv -n "__fish_seen_subcommand_from rm" -a "phase task" -d "Type"',
+            "",
+            "# restore point completions",
+            'complete -c pv -n "__fish_seen_subcommand_from restore" '
+            '-a "(pv _complete restore-points 2>/dev/null)" -d "Restore point"',
+            "",
+            "# completion shell completions",
+            'complete -c pv -n "__fish_seen_subcommand_from completion" -a "bash zsh fish" -d "Shell"',
+            "",
+            "# AI mode completions",
+            'complete -c pv -l ai -a "context actionable" -d "AI mode"',
+        ]
+    )
 
     return "\n".join(lines)
