@@ -2,6 +2,32 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.5.1](https://github.com/JacobCoffee/pv/compare/v1.5.0..v1.5.1) - 2026-10-11
+
+
+### Bug Fixes
+
+
+- resolve ruff lint and format violations on main (#6) - ([081872a](https://github.com/JacobCoffee/pv/commit/081872a557d6f6b7759243ba5c33d81928cae559)) - Jacob Coffee
+
+
+### Documentation
+
+
+- regenerate changelog for v1.5.0 - ([8d7ed9f](https://github.com/JacobCoffee/pv/commit/8d7ed9f883dace70a22022f95d82240e13582716)) - github-actions[bot]
+
+
+### Features
+
+
+- support Python 3.15 (#8) - ([62e8b5b](https://github.com/JacobCoffee/pv/commit/62e8b5b532e8b05f52bb600065dd92ed2af4ed07)) - Jacob Coffee
+
+
+### Miscellaneous Chores
+
+
+- **(deps)** bump the actions group across 1 directory with 11 updates (#7) - ([a1ee617](https://github.com/JacobCoffee/pv/commit/a1ee617eb65b362929017fb4220f739eb9b81280)) - dependabot[bot]
+- bump version to 1.5.1 - ([6ec7554](https://github.com/JacobCoffee/pv/commit/6ec75540ffeac53c65b046bf1ab74daf96d4c696)) - Jacob Coffee
 ## [1.5.0](https://github.com/JacobCoffee/pv/compare/v1.4.1..v1.5.0) - 2026-02-16
 
 
