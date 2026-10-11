@@ -624,14 +624,16 @@ def _list_restore_points(backup_dir: Path) -> list[dict]:
             label = f"Full backup #{suffix} — {project} (updated {updated})"
         except (json.JSONDecodeError, KeyError):
             label = f"Full backup #{suffix}"
-        points.append({
-            "path": f,
-            "label": label,
-            "size": stat.st_size,
-            "modified": stat.st_mtime,
-            "type": "full",
-            "index": int(suffix),
-        })
+        points.append(
+            {
+                "path": f,
+                "label": label,
+                "size": stat.st_size,
+                "modified": stat.st_mtime,
+                "type": "full",
+                "index": int(suffix),
+            }
+        )
 
     # Delta backups: plan.delta.1.json, plan.delta.2.json, ...
     for f in sorted(backup_dir.glob("plan.delta.[0-9]*.json")):
@@ -644,14 +646,16 @@ def _list_restore_points(backup_dir: Path) -> list[dict]:
             label = f"Delta patch #{suffix} — {op_count} operation{'s' if op_count != 1 else ''}"
         except (json.JSONDecodeError, KeyError):
             label = f"Delta patch #{suffix}"
-        points.append({
-            "path": f,
-            "label": label,
-            "size": stat.st_size,
-            "modified": stat.st_mtime,
-            "type": "delta",
-            "index": int(suffix),
-        })
+        points.append(
+            {
+                "path": f,
+                "label": label,
+                "size": stat.st_size,
+                "modified": stat.st_mtime,
+                "type": "delta",
+                "index": int(suffix),
+            }
+        )
 
     # Sort by modification time, newest first
     points.sort(key=lambda p: p["modified"], reverse=True)

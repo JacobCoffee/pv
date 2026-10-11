@@ -94,6 +94,8 @@ convention = "google"
     "D102",    # Missing docstring in public method (test methods)
     "D103",    # Missing docstring in public function
     "S604",    # Namespace(shell=...) false positive
+    "S603",    # subprocess call: args are static test fixtures, not untrusted input
+    "S607",    # Partial executable path: invoking the installed `pv` CLI by design
 ]
 "docs/conf.py" = [
     "INP001",  # Sphinx config is not a package

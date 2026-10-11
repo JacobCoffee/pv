@@ -5,7 +5,6 @@ import sys
 from pathlib import Path
 
 from plan_view.commands.dashboard import cmd_dashboard
-from plan_view.completions import cmd_complete, cmd_completion
 from plan_view.commands.edit import (
     cmd_add_phase,
     cmd_add_task,
@@ -42,6 +41,7 @@ from plan_view.commands.view import (
     cmd_table,
     cmd_validate,
 )
+from plan_view.completions import cmd_complete, cmd_completion
 
 # Re-export all public API for backward compatibility with tests
 from plan_view.formatting import (
